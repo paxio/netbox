@@ -318,13 +318,14 @@ class VLANGroupTable(BaseTable):
     name = tables.LinkColumn(verbose_name='Name')
     site = tables.LinkColumn('dcim:site', args=[Accessor('site.slug')], verbose_name='Site')
     vlan_count = tables.Column(verbose_name='VLANs')
+    outervid = tables.Column(verbose_name='Outer VLAN ID')
     slug = tables.Column(verbose_name='Slug')
     actions = tables.TemplateColumn(template_code=VLANGROUP_ACTIONS, attrs={'td': {'class': 'text-right'}},
                                     verbose_name='')
 
     class Meta(BaseTable.Meta):
         model = VLANGroup
-        fields = ('pk', 'name', 'site', 'vlan_count', 'slug', 'actions')
+        fields = ('pk', 'name', 'site', 'vlan_count', 'outervid', 'slug', 'actions')
 
 
 #

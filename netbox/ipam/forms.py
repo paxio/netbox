@@ -739,7 +739,7 @@ class VLANGroupForm(BootstrapMixin, forms.ModelForm):
 
     class Meta:
         model = VLANGroup
-        fields = ['site', 'name', 'slug']
+        fields = ['site', 'name', 'slug', 'outervid']
 
 
 class VLANGroupCSVForm(forms.ModelForm):
@@ -756,7 +756,7 @@ class VLANGroupCSVForm(forms.ModelForm):
 
     class Meta:
         model = VLANGroup
-        fields = ['site', 'name', 'slug']
+        fields = ['site', 'name', 'slug', 'outervid']
         help_texts = {
             'name': 'Name of VLAN group',
         }

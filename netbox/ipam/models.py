@@ -493,12 +493,17 @@ class VLANGroup(models.Model):
     name = models.CharField(max_length=50)
     slug = models.SlugField()
     site = models.ForeignKey('dcim.Site', related_name='vlan_groups', on_delete=models.PROTECT, blank=True, null=True)
+    outervid = models.PositiveSmallIntegerField(verbose_name='Outer ID', default='1', validators=[
+         MinValueValidator(1),
+         MaxValueValidator(4094)
+     ])
 
     class Meta:
-        ordering = ['site', 'name']
+        ordering = ['site', 'name', 'outervid']
         unique_together = [
             ['site', 'name'],
             ['site', 'slug'],
+            ['site', 'outervid'],
         ]
         verbose_name = 'VLAN group'
         verbose_name_plural = 'VLAN groups'
