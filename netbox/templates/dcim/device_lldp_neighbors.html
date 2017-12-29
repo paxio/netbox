@@ -64,7 +64,7 @@ $(document).ready(function() {
                 }
 
                 // Clean up hostnames/interfaces learned via LLDP
-                var lldp_device = neighbor['hostname'].split(".")[0];  // Strip off any trailing domain name
+                var lldp_device = neighbor['hostname'] // .split(".")[0];  // Strip off any trailing domain name
                 var lldp_interface = neighbor['port'].split(".")[0];   // Strip off any trailing subinterface ID
 
                 // Add LLDP neighbors to table
