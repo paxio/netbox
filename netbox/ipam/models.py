@@ -486,7 +486,7 @@ class IPAddress(CreatedUpdatedModel, CustomFieldModel):
 
 
 @python_2_unicode_compatible
-class VLANGroup(models.Model):
+class VLANGroup(models.Model, CustomFieldModel):
     """
     A VLAN group is an arbitrary collection of VLANs within which VLAN IDs and names must be unique.
     """
