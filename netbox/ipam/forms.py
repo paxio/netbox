@@ -734,7 +734,7 @@ class IPAddressFilterForm(BootstrapMixin, CustomFieldFilterForm):
 # VLAN groups
 #
 
-class VLANGroupForm(BootstrapMixin, forms.ModelForm):
+class VLANGroupForm(BootstrapMixin, CustomFieldForm):
     slug = SlugField()
 
     class Meta:
@@ -762,7 +762,8 @@ class VLANGroupCSVForm(forms.ModelForm):
         }
 
 
-class VLANGroupFilterForm(BootstrapMixin, forms.Form):
+class VLANGroupFilterForm(BootstrapMixin, CustomFieldFilterForm):
+    model = VLANGroup
     site = FilterChoiceField(
         queryset=Site.objects.annotate(filter_count=Count('vlan_groups')),
         to_field_name='slug',
