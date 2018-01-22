@@ -1238,11 +1238,13 @@ class Interface(models.Model):
         blank=True,
         verbose_name='Parent LAG'
     )
+    tenant = models.ForeignKey(Tenant, related_name='interface', blank=True, null=True, on_delete=models.PROTECT)
     name = models.CharField(max_length=64)
     form_factor = models.PositiveSmallIntegerField(choices=IFACE_FF_CHOICES, default=IFACE_FF_10GE_SFP_PLUS)
     enabled = models.BooleanField(default=True)
     mac_address = MACAddressField(null=True, blank=True, verbose_name='MAC Address')
     mtu = models.PositiveSmallIntegerField(blank=True, null=True, verbose_name='MTU')
+    dhcp_enabled = models.BooleanField(default=False, verbose_name='DHCP enabled')
     mgmt_only = models.BooleanField(
         default=False,
         verbose_name='OOB Management',
