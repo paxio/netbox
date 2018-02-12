@@ -37,8 +37,6 @@
             LAG interface<br />
             <small class="text-muted">{{ iface.member_interfaces.all|join:", "|default:"No members" }}</small>
         </td>
-    {% elif iface.is_virtual %}
-        <td colspan="2" class="text-muted">Virtual interface</td>
     {% elif iface.is_wireless %}
         <td colspan="2" class="text-muted">Wireless interface</td>
     {% elif iface.connection %}
