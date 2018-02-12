@@ -1281,13 +1281,6 @@ class Interface(models.Model):
                 'form_factor': "Virtual machines can only have virtual interfaces."
             })
 
-        # Virtual interfaces cannot be connected
-        if self.form_factor in NONCONNECTABLE_IFACE_TYPES and self.is_connected:
-            raise ValidationError({
-                'form_factor': "Virtual and wireless interfaces cannot be connected to another interface or circuit. "
-                               "Disconnect the interface or choose a suitable form factor."
-            })
-
         # An interface's LAG must belong to the same device
         if self.lag and self.lag.device != self.device:
             raise ValidationError({
