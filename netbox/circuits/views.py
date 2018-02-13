@@ -15,7 +15,7 @@ from utilities.views import (
     BulkDeleteView, BulkEditView, BulkImportView, ObjectDeleteView, ObjectEditView, ObjectListView,
 )
 from . import filters, forms, tables
-from .constants import TERM_SIDE_A, TERM_SIDE_Z
+from .constants import TERM_SIDE_A, TERM_SIDE_Z, TERM_SIDE_Y
 from .models import Circuit, CircuitTermination, CircuitType, Provider
 
 
@@ -161,11 +161,17 @@ class CircuitView(View):
         ).filter(
             circuit=circuit, term_side=TERM_SIDE_Z
         ).first()
+        termination_y = CircuitTermination.objects.select_related(
+            'site__region', 'interface__device'
+        ).filter(
+            circuit=circuit, term_side=TERM_SIDE_Y
+        ).first()
 
         return render(request, 'circuits/circuit.html', {
             'circuit': circuit,
             'termination_a': termination_a,
             'termination_z': termination_z,
+            'termination_y': termination_y,
         })
 
 

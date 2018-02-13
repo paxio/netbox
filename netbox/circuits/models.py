@@ -120,6 +120,10 @@ class Circuit(CreatedUpdatedModel, CustomFieldModel):
         return self._get_termination('A')
 
     @property
+    def termination_y(self):
+        return self._get_termination('Y')
+
+    @property
     def termination_z(self):
         return self._get_termination('Z')
 

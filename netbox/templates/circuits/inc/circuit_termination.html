@@ -22,7 +22,11 @@
                 </a>
             {% endif %}
         </div>
+{% if side == "Y" %}
+        <strong>Termination - Z Side Backup</strong>
+{% else %}
         <strong>Termination - {{ side }} Side</strong>
+{% endif %}
     </div>
     {% if termination %}
         <table class="table table-hover panel-body attr-table">
