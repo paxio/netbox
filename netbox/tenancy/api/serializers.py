@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 from rest_framework import serializers
 
 from extras.api.customfields import CustomFieldModelSerializer
-from tenancy.models import Tenant, TenantGroup
+from tenancy.models import Tenant, TenantGroup, Package
 from utilities.api import ValidatedModelSerializer
 
 
@@ -51,3 +51,29 @@ class WritableTenantSerializer(CustomFieldModelSerializer):
     class Meta:
         model = Tenant
         fields = ['id', 'name', 'slug', 'group', 'description', 'comments', 'custom_fields']
+
+#
+#  Packages
+#
+
+class NestedPackageSerializer(serializers.ModelSerializer):
+    url = serializers.HyperlinkedIdentityField(view_name='tenancy-api:package-detail')
+
+    class Meta:
+        model = Package
+        fields = ['id', 'url', 'name', 'slug']
+
+class PackageSerializer(CustomFieldModelSerializer):
+    group = NestedPackageSerializer()
+
+    class Meta:
+        model = Package
+        fields = ['id', 'name', 'slug', 'group', 'ipv4_enabled', 'ipv6_enabled', 'multicast_enabled', 'service_type', 'speed_upload', 'speed_download', 'qos_profile', 'dhcp_pool', 'tag_type']
+
+
+class WritablePackageSerializer(CustomFieldModelSerializer):
+
+    class Meta:
+        model = Package
+        fields = ['id', 'name', 'slug', 'group', 'ipv4_enabled', 'ipv6_enabled', 'multicast_enabled', 'service_type', 'speed_upload', 'speed_download', 'qos_profile', 'dhcp_pool', 'tag_type']
+

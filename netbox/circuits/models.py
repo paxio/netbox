@@ -7,7 +7,7 @@ from django.utils.encoding import python_2_unicode_compatible
 
 from dcim.fields import ASNField
 from extras.models import CustomFieldModel, CustomFieldValue
-from tenancy.models import Tenant
+from tenancy.models import Tenant, Package
 from utilities.models import CreatedUpdatedModel
 from .constants import *
 
@@ -90,13 +90,14 @@ class Circuit(CreatedUpdatedModel, CustomFieldModel):
     provider = models.ForeignKey('Provider', related_name='circuits', on_delete=models.PROTECT)
     type = models.ForeignKey('CircuitType', related_name='circuits', on_delete=models.PROTECT)
     tenant = models.ForeignKey(Tenant, related_name='circuits', blank=True, null=True, on_delete=models.PROTECT)
+    package = models.ForeignKey(Package, related_name='package', blank=True, null=True, on_delete=models.SET_NULL)
     install_date = models.DateField(blank=True, null=True, verbose_name='Date installed')
     commit_rate = models.PositiveIntegerField(blank=True, null=True, verbose_name='Commit rate (Kbps)')
     description = models.CharField(max_length=100, blank=True)
     comments = models.TextField(blank=True)
     custom_field_values = GenericRelation(CustomFieldValue, content_type_field='obj_type', object_id_field='obj_id')
 
-    csv_headers = ['cid', 'provider', 'type', 'tenant', 'install_date', 'commit_rate', 'description', 'comments']
+    csv_headers = ['cid', 'provider', 'type', 'tenant', 'package', 'install_date', 'commit_rate', 'description', 'comments']
 
     class Meta:
         ordering = ['provider', 'cid']

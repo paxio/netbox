@@ -39,7 +39,7 @@
                             <a href="{% url 'dcim:region_list' %}">Regions</a>
                         </li>
                         <li class="divider"></li>
-                        <li class="dropdown-header">Tenancy</li>
+                        <li class="dropdown-header">{{ form.tenant_group.label }}/{{ form.tenant.label }}</li>
                         <li>
                             {% if perms.tenancy.add_tenant %}
                                 <div class="buttons pull-right">
@@ -47,7 +47,7 @@
                                     <a href="{% url 'tenancy:tenant_import' %}" class="btn btn-xs btn-info" title="Import"><i class="fa fa-download"></i></a>
                                 </div>
                             {% endif %}
-                            <a href="{% url 'tenancy:tenant_list' %}">Tenants</a>
+                            <a href="{% url 'tenancy:tenant_list' %}">Customers</a>
                         </li>
                         <li>
                             {% if perms.tenancy.add_tenantgroup %}
@@ -56,7 +56,16 @@
                                     <a href="{% url 'tenancy:tenantgroup_import' %}" class="btn btn-xs btn-info" title="Import"><i class="fa fa-download"></i></a>
                                 </div>
                             {% endif %}
-                            <a href="{% url 'tenancy:tenantgroup_list' %}">Tenant Groups</a>
+                            <a href="{% url 'tenancy:tenantgroup_list' %}">Service providers</a>
+                        </li>
+                        <li>
+                            {% if perms.tenancy.add_package %}
+                                <div class="buttons pull-right">
+                                    <a href="{% url 'tenancy:package_add' %}" class="btn btn-xs btn-success" title="Add"><i class="fa fa-plus"></i></a>
+                                    <a href="{% url 'tenancy:package_import' %}" class="btn btn-xs btn-info" title="Import"><i class="fa fa-download"></i></a>
+                                </div>
+                            {% endif %}
+                            <a href="{% url 'tenancy:package_list' %}">Packages</a>
                         </li>
                         <li class="divider"></li>
                         <li class="dropdown-header">Miscellaneous</li>

@@ -7,6 +7,7 @@ from django.utils.encoding import python_2_unicode_compatible
 
 from extras.models import CustomFieldModel, CustomFieldValue
 from utilities.models import CreatedUpdatedModel
+from .constants import *
 
 
 @python_2_unicode_compatible
@@ -21,6 +22,8 @@ class TenantGroup(models.Model):
 
     class Meta:
         ordering = ['name']
+        verbose_name = 'Service Provider'
+        verbose_name_plural = 'Service Providers'
 
     def __str__(self):
         return self.name
@@ -52,6 +55,9 @@ class Tenant(CreatedUpdatedModel, CustomFieldModel):
 
     class Meta:
         ordering = ['group', 'name']
+        verbose_name = 'Customer'
+        verbose_name_plural = 'Customers'
+
 
     def __str__(self):
         return self.name
@@ -66,4 +72,52 @@ class Tenant(CreatedUpdatedModel, CustomFieldModel):
             self.group.name if self.group else None,
             self.description,
             self.comments,
+        )
+
+@python_2_unicode_compatible
+class Package(CreatedUpdatedModel, CustomFieldModel):
+    """
+    A Package represents a service delivered to our customers.
+    """
+    name = models.CharField(max_length=30, unique=True)
+    slug = models.SlugField(unique=True)
+    group = models.ForeignKey('TenantGroup', related_name='packages', blank=False, null=False, on_delete=models.CASCADE)
+    ipv4_enabled = models.BooleanField(blank=False, default=True, verbose_name='IPv4 is enabled', help_text='Customers recieve an IPv4 address')
+    ipv6_enabled = models.BooleanField(blank=False, default=True, verbose_name='IPv6 is enabled', help_text='Customers recieve an IPv6 address')
+    multicast_enabled = models.BooleanField(blank=False, default=True, verbose_name='Multicast is enabled', help_text='Customers can use multicast')
+    service_type = models.PositiveSmallIntegerField('Service type', choices=SERVICE_TYPE_CHOICES, default=SERVICE_TYPE_DYNAMIC, help_text="Static or dynamic configuration")
+    speed_upload = models.PositiveIntegerField(blank=False, null=False, verbose_name='Upload speed rate (Kbps)')
+    speed_download = models.PositiveIntegerField(blank=False, null=False, verbose_name='Download speed rate (Kbps)')
+    qos_profile = models.CharField(max_length=30, unique=False)
+    dhcp_pool = models.ForeignKey('ipam.Prefix', related_name='prefixes', blank=True, null=True, on_delete=models.SET_NULL)
+    tag_type = models.PositiveSmallIntegerField('Tag type', choices=TAG_TYPE_CHOICES, default=TAG_TYPE_DOUBLETAGGED, help_text="Customers provide any VLAN tags")
+    custom_field_values = GenericRelation(CustomFieldValue, content_type_field='obj_type', object_id_field='obj_id')
+
+    csv_headers = ['name', 'slug', 'group', 'ipv4_enabled', 'ipv6_enabled', 'multicast_enabled', 'service_type', 'speed_upload', 'speed_download', 'qos_profile', 'dhcp_pool', 'tag_type']
+
+    class Meta:
+        ordering = ['group', 'name']
+        verbose_name = 'Package'
+        verbose_name_plural = 'Packages'
+
+    def __str__(self):
+        return self.name
+
+    def get_absolute_url(self):
+        return reverse('tenancy:package', args=[self.slug])
+
+    def to_csv(self):
+        return (
+            self.name,
+            self.slug,
+            self.group.name if self.group else None,
+            self.ipv4_enabled,
+            self.ipv6_enabled,
+            self.multicast_enabled,
+            self.service_type,
+            self.speed_upload,
+            self.speed_download,
+            self.qos_profile,
+            self.dhcp_pool.prefix if self.dhcp_pool else None,
+            self.tag_type,
         )

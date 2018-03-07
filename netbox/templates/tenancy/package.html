@@ -1,0 +1,104 @@
+{% extends '_base.html' %}
+{% load helpers %}
+
+{% block content %}
+<div class="row">
+    <div class="col-sm-8 col-md-9">
+        <ol class="breadcrumb">
+            <li><a href="{% url 'tenancy:package_list' %}">Packages</a></li>
+            {% if tenant.group %}
+                <li><a href="{% url 'tenancy:package_list' %}?group={{ package.group.slug }}">{{ package.group }}</a></li>
+            {% endif %}
+            <li>{{ package }}</li>
+        </ol>
+    </div>
+    <div class="col-sm-4 col-md-3">
+        <form action="{% url 'tenancy:package_list' %}" method="get">
+            <div class="input-group">
+                <input type="text" name="q" class="form-control" placeholder="Name" />
+                <span class="input-group-btn">
+                    <button type="submit" class="btn btn-primary">
+                        <span class="fa fa-search" aria-hidden="true"></span>
+                    </button>
+                </span>
+            </div>
+        </form>
+    </div>
+</div>
+<div class="pull-right">
+    {% if perms.tenancy.change_package %}
+		<a href="{% url 'tenancy:package_edit' slug=package.slug %}" class="btn btn-warning">
+			<span class="fa fa-pencil" aria-hidden="true"></span>
+			Edit this package
+		</a>
+    {% endif %}
+    {% if perms.tenancy.delete_package %}
+		<a href="{% url 'tenancy:package_delete' slug=package.slug %}" class="btn btn-danger">
+			<span class="fa fa-trash" aria-hidden="true"></span>
+			Delete this package
+		</a>
+    {% endif %}
+</div>
+<h1>{% block title %}{{ package }}{% endblock %}</h1>
+{% include 'inc/created_updated.html' with obj=package %}
+<div class="row">
+	<div class="col-md-7">
+        <div class="panel panel-default">
+            <div class="panel-heading">
+                <strong>Package</strong>
+            </div>
+            <table class="table table-hover panel-body attr-table">
+                <tr>
+                    <td>Group</td>
+                    <td>
+                        {% if package.group %}
+                            <a href="{{ package.group.get_absolute_url }}">{{ package.group }}</a>
+                        {% else %}
+                            <span class="text-muted">None</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                <tr>
+                    <td>IPv4</td>
+                    <td>{{ package.ipv4_enabled }}</td>
+                </tr>
+                <tr>
+                    <td>IPv6</td>
+                    <td>{{ package.ipv6_enabled }}</td>
+                </tr>
+                <tr>
+                    <td>Multicast</td>
+                    <td>{{ package.multicast_enabled }}</td>
+                </tr>
+                <tr>
+                    <td>Service type</td>
+                    <td>{{ package.service_type }}</td>
+                </tr>
+                <tr>
+                    <td>Upload speed</td>
+                    <td>{{ package.speed_upload }}</td>
+                </tr>
+                <tr>
+                    <td>Download speed</td>
+                    <td>{{ package.speed_download }}</td>
+                </tr>
+                <tr>
+                    <td>QoS Profile</td>
+                    <td>{{ package.qos_profile }}</td>
+                </tr>
+                <tr>
+                    <td>DHCP Pool</td>
+                    <td>{{ package.dhcp_pool }}</td>
+                </tr>
+                <tr>
+                    <td>Tag type</td>
+                    <td>{{ package.tag_type }}</td>
+                </tr>
+            </table>
+        </div>
+        {% with tenant.get_custom_fields as custom_fields %}
+            {% include 'inc/custom_fields_panel.html' %}
+        {% endwith %}
+	</div>
+</div>
+{% endblock %}

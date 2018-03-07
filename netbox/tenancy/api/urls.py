@@ -22,6 +22,7 @@ router.register(r'_choices', views.TenancyFieldChoicesViewSet, base_name='field-
 # Tenants
 router.register(r'tenant-groups', views.TenantGroupViewSet)
 router.register(r'tenants', views.TenantViewSet)
+router.register(r'packages', views.PackageViewSet)
 
 app_name = 'tenancy-api'
 urlpatterns = router.urls

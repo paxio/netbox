@@ -4,7 +4,7 @@ from rest_framework.viewsets import ModelViewSet
 
 from extras.api.views import CustomFieldModelViewSet
 from tenancy import filters
-from tenancy.models import Tenant, TenantGroup
+from tenancy.models import Tenant, TenantGroup, Package
 from utilities.api import FieldChoicesViewSet, WritableSerializerMixin
 from . import serializers
 
@@ -36,3 +36,14 @@ class TenantViewSet(WritableSerializerMixin, CustomFieldModelViewSet):
     serializer_class = serializers.TenantSerializer
     write_serializer_class = serializers.WritableTenantSerializer
     filter_class = filters.TenantFilter
+
+
+#
+#  Packages
+#
+
+class PackageViewSet(WritableSerializerMixin, CustomFieldModelViewSet):
+    queryset = Package.objects.all()
+    serializer_class = serializers.PackageSerializer
+    write_serializer_class = serializers.WritablePackageSerializer
+    filter_class = filters.PackageFilter

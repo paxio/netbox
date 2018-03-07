@@ -13,7 +13,6 @@ from utilities.forms import (
 )
 from .models import Circuit, CircuitTermination, CircuitType, Provider
 
-
 #
 # Providers
 #
@@ -105,7 +104,7 @@ class CircuitForm(BootstrapMixin, TenancyForm, CustomFieldForm):
     class Meta:
         model = Circuit
         fields = [
-            'cid', 'type', 'provider', 'install_date', 'commit_rate', 'description', 'tenant_group', 'tenant',
+            'cid', 'type', 'provider', 'install_date', 'commit_rate', 'description', 'tenant_group', 'tenant', 'package',
             'comments',
         ]
         help_texts = {
@@ -113,6 +112,17 @@ class CircuitForm(BootstrapMixin, TenancyForm, CustomFieldForm):
             'install_date': "Format: YYYY-MM-DD",
             'commit_rate': "Committed rate",
         }
+
+    def clean(self):
+
+        super(CircuitForm, self).clean()
+
+        ctype = self.cleaned_data.get('type')
+        package = self.cleaned_data.get('package')
+
+        # Validate interface
+        if ctype.slug == 'customer' and package == None:
+            raise forms.ValidationError("A package is required for a customer circuit")
 
 
 class CircuitCSVForm(forms.ModelForm):

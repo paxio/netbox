@@ -16,8 +16,12 @@
                 </div>
                 <div class="list-group-item">
                     <span class="badge pull-right">{{ stats.tenant_count }}</span>
-                    <h4 class="list-group-item-heading"><a href="{% url 'tenancy:tenant_list' %}">Tenants</a></h4>
-                    <p class="list-group-item-text text-muted">Customers or departments</p>
+                    <h4 class="list-group-item-heading"><a href="{% url 'tenancy:tenant_list' %}">Customers</a></h4>
+                </div>
+                <div class="list-group-item">
+                    <span class="badge pull-right">{{ stats.package_count }}</span>
+                    <h4 class="list-group-item-heading"><a href="{% url 'tenancy:package_list' %}">Packages</a></h4>
+                    <p class="list-group-item-text text-muted">Sales packages</p>
                 </div>
             </div>
         </div>

@@ -5,7 +5,7 @@ from rest_framework import serializers
 from circuits.models import Provider, Circuit, CircuitTermination, CircuitType
 from dcim.api.serializers import NestedSiteSerializer, InterfaceSerializer
 from extras.api.customfields import CustomFieldModelSerializer
-from tenancy.api.serializers import NestedTenantSerializer
+from tenancy.api.serializers import NestedTenantSerializer, NestedPackageSerializer
 from utilities.api import ValidatedModelSerializer
 
 
@@ -68,11 +68,12 @@ class CircuitSerializer(CustomFieldModelSerializer):
     provider = NestedProviderSerializer()
     type = NestedCircuitTypeSerializer()
     tenant = NestedTenantSerializer()
+    package = NestedPackageSerializer()
 
     class Meta:
         model = Circuit
         fields = [
-            'id', 'cid', 'provider', 'type', 'tenant', 'install_date', 'commit_rate', 'description', 'comments',
+            'id', 'cid', 'provider', 'type', 'tenant', 'package', 'install_date', 'commit_rate', 'description', 'comments',
             'custom_fields',
         ]
 
@@ -90,7 +91,7 @@ class WritableCircuitSerializer(CustomFieldModelSerializer):
     class Meta:
         model = Circuit
         fields = [
-            'id', 'cid', 'provider', 'type', 'tenant', 'install_date', 'commit_rate', 'description', 'comments',
+            'id', 'cid', 'provider', 'type', 'tenant', 'package', 'install_date', 'commit_rate', 'description', 'comments',
             'custom_fields',
         ]
 

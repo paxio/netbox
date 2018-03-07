@@ -14,7 +14,7 @@ from utilities.views import (
 )
 from virtualization.models import VirtualMachine
 from . import filters, forms, tables
-from .models import Tenant, TenantGroup
+from .models import Tenant, TenantGroup, Package
 
 
 #
@@ -138,3 +138,61 @@ class TenantBulkDeleteView(PermissionRequiredMixin, BulkDeleteView):
     filter = filters.TenantFilter
     table = tables.TenantTable
     default_return_url = 'tenancy:tenant_list'
+
+#
+#  Packages
+#
+
+class PackageListView(ObjectListView):
+    queryset = Package.objects.annotate(package_count=Count('id'))
+    filter = filters.PackageFilter
+    filter_form = forms.PackageFilterForm
+    table = tables.PackageTable
+    template_name = 'tenancy/package_list.html'
+
+class PackageCreateView(PermissionRequiredMixin, ObjectEditView):
+    permission_required = 'tenancy.add_package'
+    model = Package
+    model_form = forms.PackageForm
+    template_name = 'tenancy/package_edit.html'
+    default_return_url = 'tenancy:package_list'
+
+class PackageEditView(PackageCreateView):
+    permission_required = 'tenancy.change_package'
+
+class PackageBulkImportView(PermissionRequiredMixin, BulkImportView):
+    permission_required = 'tenancy.add_package'
+    model_form = forms.PackageCSVForm
+    table = tables.PackageTable
+    default_return_url = 'tenancy:package_list'
+
+class PackageBulkEditView(PermissionRequiredMixin, BulkEditView):
+    permission_required = 'tenancy.change_package'
+    cls = Package
+    queryset = Package.objects.select_related('group')
+    filter = filters.PackageFilter
+    table = tables.PackageTable
+    form = forms.PackageBulkEditForm
+    default_return_url = 'tenancy:package_list'
+
+class PackageBulkDeleteView(PermissionRequiredMixin, BulkDeleteView):
+    permission_required = 'tenancy.delete_package'
+    cls = Package
+    queryset = Package.objects.select_related('group')
+    filter = filters.PackageFilter
+    table = tables.PackageTable
+    default_return_url = 'tenancy:package_list'
+
+class PackageView(View):
+
+    def get(self, request, slug):
+        package = get_object_or_404(Package, slug=slug)
+
+        return render(request, 'tenancy/package.html', {
+            'package': package
+        })
+
+class PackageDeleteView(PermissionRequiredMixin, ObjectDeleteView):
+    permission_required = 'tenancy.delete_package'
+    model = Package
+    default_return_url = 'tenancy:package_list'

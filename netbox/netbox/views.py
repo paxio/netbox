@@ -23,7 +23,7 @@ from secrets.filters import SecretFilter
 from secrets.models import Secret
 from secrets.tables import SecretTable
 from tenancy.filters import TenantFilter
-from tenancy.models import Tenant
+from tenancy.models import Tenant, Package
 from tenancy.tables import TenantTable
 from virtualization.filters import ClusterFilter, VirtualMachineFilter
 from virtualization.models import Cluster, VirtualMachine
@@ -145,6 +145,7 @@ class HomeView(View):
             # Organization
             'site_count': Site.objects.count(),
             'tenant_count': Tenant.objects.count(),
+            'package_count': Package.objects.count(),
 
             # DCIM
             'rack_count': Rack.objects.count(),
