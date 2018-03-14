@@ -1035,9 +1035,22 @@ class DeviceBulkEditForm(BootstrapMixin, CustomFieldBulkEditForm):
     platform = forms.ModelChoiceField(queryset=Platform.objects.all(), required=False)
     status = forms.ChoiceField(choices=add_blank_choice(DEVICE_STATUS_CHOICES), required=False, initial='')
     serial = forms.CharField(max_length=50, required=False, label='Serial Number')
+    site = forms.ModelChoiceField(queryset=Site.objects.all(), required=False, label='Site')
+    rack = forms.ModelChoiceField(queryset=Rack.objects.all(), required=False, label='Rack')
+    face = forms.ChoiceField(choices=add_blank_choice(RACK_FACE_CHOICES), required=False, initial='')
+    position = forms.TypedChoiceField(
+        required=False,
+        empty_value=None,
+        help_text="The lowest-numbered unit occupied by the device",
+        widget=APISelect(
+            api_url='/api/dcim/racks/{{rack}}/units/?face={{face}}',
+            disabled_indicator='device'
+        ),
+        label='Position'
+    )
 
     class Meta:
-        nullable_fields = ['tenant', 'platform', 'serial']
+        nullable_fields = ['tenant', 'platform', 'serial', 'rack', 'face', 'position']
 
 
 def device_status_choices():
