@@ -604,6 +604,10 @@ class InterfaceFilter(django_filters.FilterSet):
         method='_mac_address',
         label='MAC address',
     )
+    mgmt_only = django_filters.BooleanFilter(
+        method='filter_device',
+        label='Management interface',
+    )
 
     class Meta:
         model = Interface
