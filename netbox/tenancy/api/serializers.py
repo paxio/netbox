@@ -43,7 +43,7 @@ class NestedTenantSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Tenant
-        fields = ['id', 'url', 'name', 'slug']
+        fields = ['id', 'url', 'name', 'slug', 'custom_fields']
 
 
 class WritableTenantSerializer(CustomFieldModelSerializer):
@@ -61,7 +61,7 @@ class NestedPackageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Package
-        fields = ['id', 'url', 'name', 'slug']
+        fields = ['id', 'url', 'name', 'slug', 'tag_type']
 
 class PackageSerializer(CustomFieldModelSerializer):
     group = NestedPackageSerializer()
