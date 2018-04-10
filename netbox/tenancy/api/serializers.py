@@ -38,12 +38,12 @@ class TenantSerializer(CustomFieldModelSerializer):
         fields = ['id', 'name', 'slug', 'group', 'description', 'comments', 'custom_fields', 'created', 'last_updated']
 
 
-class NestedTenantSerializer(CustomFieldModelSerializer):
+class NestedTenantSerializer(serializers.ModelSerializer):
     url = serializers.HyperlinkedIdentityField(view_name='tenancy-api:tenant-detail')
 
     class Meta:
         model = Tenant
-        fields = ['id', 'url', 'name', 'slug', 'custom_fields']
+        fields = ['id', 'url', 'name', 'slug', 'description']
 
 
 class WritableTenantSerializer(CustomFieldModelSerializer):
