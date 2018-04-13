@@ -1671,53 +1671,7 @@ class PowerOutletBulkDisconnectForm(ConfirmationForm):
 # Interfaces
 #
 
-class InterfaceForm(BootstrapMixin, forms.ModelForm, ChainedFieldsMixin):
-    site = forms.ModelChoiceField(
-        queryset=Site.objects.all(),
-        required=False,
-        label='VLAN site',
-        widget=forms.Select(
-            attrs={'filter-for': 'vlan_group', 'nullable': 'true'},
-        )
-    )
-    vlan_group = ChainedModelChoiceField(
-        queryset=VLANGroup.objects.all(),
-        chains=(
-            ('site', 'site'),
-        ),
-        required=False,
-        label='VLAN group',
-        widget=APISelect(
-            attrs={'filter-for': 'untagged_vlan tagged_vlans', 'nullable': 'true'},
-            api_url='/api/ipam/vlan-groups/?site_id={{site}}',
-        )
-    )
-    untagged_vlan = ChainedModelChoiceField(
-        queryset=VLAN.objects.all(),
-        chains=(
-            ('site', 'site'),
-            ('group', 'vlan_group'),
-        ),
-        required=False,
-        label='Untagged VLAN',
-        widget=APISelect(
-            api_url='/api/ipam/vlans/?site_id={{site}}&group_id={{vlan_group}}',
-            display_field='display_name'
-        )
-    )
-    tagged_vlans = ChainedModelMultipleChoiceField(
-        queryset=VLAN.objects.all(),
-        chains=(
-            ('site', 'site'),
-            ('group', 'vlan_group'),
-        ),
-        required=False,
-        label='Tagged VLANs',
-        widget=APISelectMultiple(
-            api_url='/api/ipam/vlans/?site_id={{site}}&group_id={{vlan_group}}',
-            display_field='display_name'
-        )
-    )
+class InterfaceForm(BootstrapMixin, forms.ModelForm):
 
     class Meta:
         model = Interface
