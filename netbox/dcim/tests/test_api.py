@@ -2321,10 +2321,7 @@ class InterfaceTest(HttpStatusMixin, APITestCase):
         data = {
             'device': self.device.pk,
             'name': 'Test Interface 4',
-<<<<<<< HEAD
-=======
             'mode': IFACE_MODE_TAGGED,
->>>>>>> v2.3.2
             'tagged_vlans': [self.vlan1.id, self.vlan2.id],
             'untagged_vlan': self.vlan3.id
         }
@@ -2372,30 +2369,21 @@ class InterfaceTest(HttpStatusMixin, APITestCase):
             {
                 'device': self.device.pk,
                 'name': 'Test Interface 4',
-<<<<<<< HEAD
-=======
                 'mode': IFACE_MODE_TAGGED,
->>>>>>> v2.3.2
                 'tagged_vlans': [self.vlan1.id],
                 'untagged_vlan': self.vlan2.id,
             },
             {
                 'device': self.device.pk,
                 'name': 'Test Interface 5',
-<<<<<<< HEAD
-=======
                 'mode': IFACE_MODE_TAGGED,
->>>>>>> v2.3.2
                 'tagged_vlans': [self.vlan1.id],
                 'untagged_vlan': self.vlan2.id,
             },
             {
                 'device': self.device.pk,
                 'name': 'Test Interface 6',
-<<<<<<< HEAD
-=======
                 'mode': IFACE_MODE_TAGGED,
->>>>>>> v2.3.2
                 'tagged_vlans': [self.vlan1.id],
                 'untagged_vlan': self.vlan2.id,
             },
