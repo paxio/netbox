@@ -1455,8 +1455,6 @@ class Interface(models.Model):
                                  "device/VM, or it must be global".format(self.untagged_vlan)
             })
 
-<<<<<<< HEAD
-=======
     def save(self, *args, **kwargs):
 
         # Remove untagged VLAN assignment for non-802.1Q interfaces
@@ -1469,7 +1467,6 @@ class Interface(models.Model):
 
         return super(Interface, self).save(*args, **kwargs)
 
->>>>>>> v2.3.2
     @property
     def parent(self):
         return self.device or self.virtual_machine
