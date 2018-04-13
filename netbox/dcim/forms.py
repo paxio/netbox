@@ -14,11 +14,18 @@ from ipam.models import IPAddress, VLAN, VLANGroup
 from tenancy.forms import TenancyForm
 from tenancy.models import Tenant
 from utilities.forms import (
+<<<<<<< HEAD
     APISelect, APISelectMultiple, add_blank_choice, ArrayFieldSelectMultiple, BootstrapMixin, BulkEditForm,
     BulkEditNullBooleanSelect, ChainedFieldsMixin, ChainedModelChoiceField, ChainedModelMultipleChoiceField,
     CommentField, ComponentForm, ConfirmationForm, CSVChoiceField, ExpandableNameField, FilterChoiceField,
     FilterTreeNodeMultipleChoiceField, FlexibleModelChoiceField, Livesearch, SelectWithDisabled, SelectWithPK,
     SmallTextarea, SlugField,
+=======
+    AnnotatedMultipleChoiceField, APISelect, add_blank_choice, ArrayFieldSelectMultiple, BootstrapMixin, BulkEditForm,
+    BulkEditNullBooleanSelect, ChainedFieldsMixin, ChainedModelChoiceField, CommentField, ComponentForm,
+    ConfirmationForm, CSVChoiceField, ExpandableNameField, FilterChoiceField, FilterTreeNodeMultipleChoiceField,
+    FlexibleModelChoiceField, Livesearch, SelectWithDisabled, SelectWithPK, SmallTextarea, SlugField,
+>>>>>>> v2.3.2
 )
 from virtualization.models import Cluster
 from .constants import (
@@ -36,6 +43,12 @@ from .models import (
 )
 
 DEVICE_BY_PK_RE = '{\d+\}'
+
+INTERFACE_MODE_HELP_TEXT = """
+Access: One untagged VLAN<br />
+Tagged: One untagged VLAN and/or one or more tagged VLANs<br />
+Tagged All: Implies all VLANs are available (w/optional untagged VLAN)
+"""
 
 
 def get_device_by_name_or_pk(name):
@@ -170,6 +183,7 @@ class SiteBulkEditForm(BootstrapMixin, CustomFieldBulkEditForm):
 
     class Meta:
         nullable_fields = ['region', 'tenant', 'asn', 'description', 'time_zone']
+<<<<<<< HEAD
 
 
 def site_status_choices():
@@ -177,12 +191,23 @@ def site_status_choices():
     for status in Site.objects.values('status').annotate(count=Count('status')).order_by('status'):
         status_counts[status['status']] = status['count']
     return [(s[0], '{} ({})'.format(s[1], status_counts.get(s[0], 0))) for s in SITE_STATUS_CHOICES]
+=======
+>>>>>>> v2.3.2
 
 
 class SiteFilterForm(BootstrapMixin, CustomFieldFilterForm):
     model = Site
     q = forms.CharField(required=False, label='Search')
+<<<<<<< HEAD
     status = forms.MultipleChoiceField(choices=site_status_choices, required=False)
+=======
+    status = AnnotatedMultipleChoiceField(
+        choices=SITE_STATUS_CHOICES,
+        annotate=Site.objects.all(),
+        annotate_field='status',
+        required=False
+    )
+>>>>>>> v2.3.2
     region = FilterTreeNodeMultipleChoiceField(
         queryset=Region.objects.annotate(filter_count=Count('sites')),
         to_field_name='slug',
@@ -700,6 +725,15 @@ class PlatformForm(BootstrapMixin, forms.ModelForm):
 
 class PlatformCSVForm(forms.ModelForm):
     slug = SlugField()
+    manufacturer = forms.ModelChoiceField(
+        queryset=Manufacturer.objects.all(),
+        required=True,
+        to_field_name='name',
+        help_text='Manufacturer name',
+        error_messages={
+            'invalid_choice': 'Manufacturer not found.',
+        }
+    )
 
     class Meta:
         model = Platform
@@ -1053,6 +1087,7 @@ class DeviceBulkEditForm(BootstrapMixin, CustomFieldBulkEditForm):
         nullable_fields = ['tenant', 'platform', 'serial', 'rack', 'face', 'position']
 
 
+<<<<<<< HEAD
 def device_status_choices():
     status_counts = {}
     for status in Device.objects.values('status').annotate(count=Count('status')).order_by('status'):
@@ -1060,6 +1095,8 @@ def device_status_choices():
     return [(s[0], '{} ({})'.format(s[1], status_counts.get(s[0], 0))) for s in DEVICE_STATUS_CHOICES]
 
 
+=======
+>>>>>>> v2.3.2
 class DeviceFilterForm(BootstrapMixin, CustomFieldFilterForm):
     model = Device
     q = forms.CharField(required=False, label='Search')
@@ -1097,7 +1134,12 @@ class DeviceFilterForm(BootstrapMixin, CustomFieldFilterForm):
         to_field_name='slug',
         null_label='-- None --',
     )
-    status = forms.MultipleChoiceField(choices=device_status_choices, required=False)
+    status = AnnotatedMultipleChoiceField(
+        choices=DEVICE_STATUS_CHOICES,
+        annotate=Device.objects.all(),
+        annotate_field='status',
+        required=False
+    )
     mac_address = forms.CharField(required=False, label='MAC address')
     has_primary_ip = forms.NullBooleanField(
         required=False,
@@ -1712,11 +1754,22 @@ class InterfaceForm(BootstrapMixin, forms.ModelForm, ChainedFieldsMixin):
     class Meta:
         model = Interface
         fields = [
+<<<<<<< HEAD
             'device', 'name', 'form_factor', 'enabled', 'lag', 'mtu', 'mac_address', 'mgmt_only', 'description',
             'mode', 'site', 'vlan_group', 'untagged_vlan', 'tagged_vlans',
+=======
+            'device', 'name', 'form_factor', 'enabled', 'lag', 'mac_address', 'mtu', 'mgmt_only', 'description',
+            'mode', 'untagged_vlan', 'tagged_vlans',
+>>>>>>> v2.3.2
         ]
         widgets = {
             'device': forms.HiddenInput(),
+        }
+        labels = {
+            'mode': '802.1Q Mode',
+        }
+        help_texts = {
+            'mode': INTERFACE_MODE_HELP_TEXT,
         }
 
     def __init__(self, *args, **kwargs):
@@ -1732,6 +1785,7 @@ class InterfaceForm(BootstrapMixin, forms.ModelForm, ChainedFieldsMixin):
             device = self.instance.device
             self.fields['lag'].queryset = Interface.objects.order_naturally().filter(
                 device__in=[self.instance.device, self.instance.device.get_vc_master()], form_factor=IFACE_FF_LAG
+<<<<<<< HEAD
             )
 
         # Limit the queryset for the site to only include the interface's device's site
@@ -1786,6 +1840,112 @@ class InterfaceForm(BootstrapMixin, forms.ModelForm, ChainedFieldsMixin):
 
 
 class InterfaceCreateForm(ComponentForm, ChainedFieldsMixin):
+=======
+            )
+
+    def clean(self):
+
+        super(InterfaceForm, self).clean()
+
+        # Validate VLAN assignments
+        tagged_vlans = self.cleaned_data['tagged_vlans']
+
+        # Untagged interfaces cannot be assigned tagged VLANs
+        if self.cleaned_data['mode'] == IFACE_MODE_ACCESS and tagged_vlans:
+            raise forms.ValidationError({
+                'mode': "An access interface cannot have tagged VLANs assigned."
+            })
+
+        # Remove all tagged VLAN assignments from "tagged all" interfaces
+        elif self.cleaned_data['mode'] == IFACE_MODE_TAGGED_ALL:
+            self.cleaned_data['tagged_vlans'] = []
+
+
+class InterfaceAssignVLANsForm(BootstrapMixin, forms.ModelForm):
+    vlans = forms.MultipleChoiceField(
+        choices=[],
+        label='VLANs',
+        widget=forms.SelectMultiple(attrs={'size': 20})
+    )
+    tagged = forms.BooleanField(
+        required=False,
+        initial=True
+    )
+
+    class Meta:
+        model = Interface
+        fields = []
+
+    def __init__(self, *args, **kwargs):
+
+        super(InterfaceAssignVLANsForm, self).__init__(*args, **kwargs)
+
+        if self.instance.mode == IFACE_MODE_ACCESS:
+            self.initial['tagged'] = False
+
+        # Find all VLANs already assigned to the interface for exclusion from the list
+        assigned_vlans = [v.pk for v in self.instance.tagged_vlans.all()]
+        if self.instance.untagged_vlan is not None:
+            assigned_vlans.append(self.instance.untagged_vlan.pk)
+
+        # Compile VLAN choices
+        vlan_choices = []
+
+        # Add global VLANs
+        global_vlans = VLAN.objects.filter(site=None, group=None).exclude(pk__in=assigned_vlans)
+        vlan_choices.append((
+            'Global', [(vlan.pk, vlan) for vlan in global_vlans])
+        )
+
+        # Add grouped global VLANs
+        for group in VLANGroup.objects.filter(site=None):
+            global_group_vlans = VLAN.objects.filter(group=group).exclude(pk__in=assigned_vlans)
+            vlan_choices.append(
+                (group.name, [(vlan.pk, vlan) for vlan in global_group_vlans])
+            )
+
+        parent = self.instance.parent
+        if parent is not None:
+
+            # Add site VLANs
+            site_vlans = VLAN.objects.filter(site=parent.site, group=None).exclude(pk__in=assigned_vlans)
+            vlan_choices.append((parent.site.name, [(vlan.pk, vlan) for vlan in site_vlans]))
+
+            # Add grouped site VLANs
+            for group in VLANGroup.objects.filter(site=parent.site):
+                site_group_vlans = VLAN.objects.filter(group=group).exclude(pk__in=assigned_vlans)
+                vlan_choices.append((
+                    '{} / {}'.format(group.site.name, group.name),
+                    [(vlan.pk, vlan) for vlan in site_group_vlans]
+                ))
+
+        self.fields['vlans'].choices = vlan_choices
+
+    def clean(self):
+
+        super(InterfaceAssignVLANsForm, self).clean()
+
+        # Only untagged VLANs permitted on an access interface
+        if self.instance.mode == IFACE_MODE_ACCESS and len(self.cleaned_data['vlans']) > 1:
+            raise forms.ValidationError("Only one VLAN may be assigned to an access interface.")
+
+        # 'tagged' is required if more than one VLAN is selected
+        if not self.cleaned_data['tagged'] and len(self.cleaned_data['vlans']) > 1:
+            raise forms.ValidationError("Only one untagged VLAN may be selected.")
+
+    def save(self, *args, **kwargs):
+
+        if self.cleaned_data['tagged']:
+            for vlan in self.cleaned_data['vlans']:
+                self.instance.tagged_vlans.add(vlan)
+        else:
+            self.instance.untagged_vlan_id = self.cleaned_data['vlans'][0]
+
+        return super(InterfaceAssignVLANsForm, self).save(*args, **kwargs)
+
+
+class InterfaceCreateForm(ComponentForm, forms.Form):
+>>>>>>> v2.3.2
     name_pattern = ExpandableNameField(label='Name')
     form_factor = forms.ChoiceField(choices=IFACE_FF_CHOICES)
     enabled = forms.BooleanField(required=False)
@@ -1799,6 +1959,7 @@ class InterfaceCreateForm(ComponentForm, ChainedFieldsMixin):
     )
     description = forms.CharField(max_length=100, required=False)
     mode = forms.ChoiceField(choices=add_blank_choice(IFACE_MODE_CHOICES), required=False)
+<<<<<<< HEAD
     site = forms.ModelChoiceField(
         queryset=Site.objects.all(),
         required=False,
@@ -1843,6 +2004,8 @@ class InterfaceCreateForm(ComponentForm, ChainedFieldsMixin):
             api_url='/api/ipam/vlans/?site_id={{site}}&group_id={{vlan_group}}',
         )
     )
+=======
+>>>>>>> v2.3.2
 
     def __init__(self, *args, **kwargs):
 
@@ -1903,6 +2066,7 @@ class InterfaceBulkEditForm(BootstrapMixin, BulkEditForm, ChainedFieldsMixin):
     mgmt_only = forms.NullBooleanField(required=False, widget=BulkEditNullBooleanSelect, label='Management only')
     description = forms.CharField(max_length=100, required=False)
     mode = forms.ChoiceField(choices=add_blank_choice(IFACE_MODE_CHOICES), required=False)
+<<<<<<< HEAD
     site = forms.ModelChoiceField(
         queryset=Site.objects.all(),
         required=False,
@@ -1950,6 +2114,11 @@ class InterfaceBulkEditForm(BootstrapMixin, BulkEditForm, ChainedFieldsMixin):
 
     class Meta:
         nullable_fields = ['lag', 'mtu', 'description', 'untagged_vlan', 'tagged_vlans']
+=======
+
+    class Meta:
+        nullable_fields = ['lag', 'mtu', 'description', 'mode']
+>>>>>>> v2.3.2
 
     def __init__(self, *args, **kwargs):
         super(InterfaceBulkEditForm, self).__init__(*args, **kwargs)
@@ -1985,6 +2154,10 @@ class InterfaceBulkEditForm(BootstrapMixin, BulkEditForm, ChainedFieldsMixin):
 
         self.fields['untagged_vlan'].queryset = VLAN.objects.filter(**filter_dict)
         self.fields['tagged_vlans'].queryset = VLAN.objects.filter(**filter_dict)
+
+
+class InterfaceBulkRenameForm(BulkRenameForm):
+    pk = forms.ModelMultipleChoiceField(queryset=Interface.objects.all(), widget=forms.MultipleHiddenInput)
 
 
 class InterfaceBulkRenameForm(BulkRenameForm):

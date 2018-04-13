@@ -1455,6 +1455,21 @@ class Interface(models.Model):
                                  "device/VM, or it must be global".format(self.untagged_vlan)
             })
 
+<<<<<<< HEAD
+=======
+    def save(self, *args, **kwargs):
+
+        # Remove untagged VLAN assignment for non-802.1Q interfaces
+        if self.mode is None:
+            self.untagged_vlan = None
+
+        # Only "tagged" interfaces may have tagged VLANs assigned. ("tagged all" implies all VLANs are assigned.)
+        if self.pk and self.mode is not IFACE_MODE_TAGGED:
+            self.tagged_vlans.clear()
+
+        return super(Interface, self).save(*args, **kwargs)
+
+>>>>>>> v2.3.2
     @property
     def parent(self):
         return self.device or self.virtual_machine
