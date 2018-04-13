@@ -962,11 +962,9 @@ class DeviceLLDPNeighborsView(PermissionRequiredMixin, View):
     def get(self, request, pk):
 
         device = get_object_or_404(Device, pk=pk)
-        interfaces = Interface.objects.order_naturally(
+        interfaces = device.vc_interfaces.order_naturally(
             device.device_type.interface_ordering
-        ).connectable().filter(
-            device=device
-        ).select_related(
+        ).connectable().select_related(
             'connected_as_a', 'connected_as_b'
         )
 
@@ -1132,9 +1130,15 @@ class ConsolePortDisconnectView(PermissionRequiredMixin, View):
             'form': form,
             'return_url': reverse('dcim:device', kwargs={'pk': consoleport.device.pk}),
         })
+<<<<<<< HEAD
 
     def post(self, request, pk):
 
+=======
+
+    def post(self, request, pk):
+
+>>>>>>> v2.3.2
         consoleport = get_object_or_404(ConsolePort, pk=pk)
         form = ConfirmationForm(request.POST)
 
@@ -1205,6 +1209,7 @@ class ConsoleServerPortCreateView(PermissionRequiredMixin, ComponentCreateView):
 
 class ConsoleServerPortConnectView(PermissionRequiredMixin, View):
     permission_required = 'dcim.change_consoleserverport'
+<<<<<<< HEAD
 
     def get(self, request, pk):
 
@@ -1225,6 +1230,28 @@ class ConsoleServerPortConnectView(PermissionRequiredMixin, View):
     def post(self, request, pk):
 
         consoleserverport = get_object_or_404(ConsoleServerPort, pk=pk)
+=======
+
+    def get(self, request, pk):
+
+        consoleserverport = get_object_or_404(ConsoleServerPort, pk=pk)
+        form = forms.ConsoleServerPortConnectionForm(initial={
+            'site': request.GET.get('site'),
+            'rack': request.GET.get('rack'),
+            'device': request.GET.get('device'),
+            'connection_status': CONNECTION_STATUS_CONNECTED,
+        })
+
+        return render(request, 'dcim/consoleserverport_connect.html', {
+            'consoleserverport': consoleserverport,
+            'form': form,
+            'return_url': reverse('dcim:device', kwargs={'pk': consoleserverport.device.pk}),
+        })
+
+    def post(self, request, pk):
+
+        consoleserverport = get_object_or_404(ConsoleServerPort, pk=pk)
+>>>>>>> v2.3.2
         form = forms.ConsoleServerPortConnectionForm(request.POST)
 
         if form.is_valid():
@@ -1354,6 +1381,7 @@ class PowerPortCreateView(PermissionRequiredMixin, ComponentCreateView):
 
 class PowerPortConnectView(PermissionRequiredMixin, View):
     permission_required = 'dcim.change_powerport'
+<<<<<<< HEAD
 
     def get(self, request, pk):
 
@@ -1374,6 +1402,28 @@ class PowerPortConnectView(PermissionRequiredMixin, View):
     def post(self, request, pk):
 
         powerport = get_object_or_404(PowerPort, pk=pk)
+=======
+
+    def get(self, request, pk):
+
+        powerport = get_object_or_404(PowerPort, pk=pk)
+        form = forms.PowerPortConnectionForm(instance=powerport, initial={
+            'site': request.GET.get('site'),
+            'rack': request.GET.get('rack'),
+            'pdu': request.GET.get('pdu'),
+            'connection_status': CONNECTION_STATUS_CONNECTED,
+        })
+
+        return render(request, 'dcim/powerport_connect.html', {
+            'powerport': powerport,
+            'form': form,
+            'return_url': reverse('dcim:device', kwargs={'pk': powerport.device.pk}),
+        })
+
+    def post(self, request, pk):
+
+        powerport = get_object_or_404(PowerPort, pk=pk)
+>>>>>>> v2.3.2
         form = forms.PowerPortConnectionForm(request.POST, instance=powerport)
 
         if form.is_valid():
@@ -1540,6 +1590,7 @@ class PowerOutletConnectView(PermissionRequiredMixin, View):
 
 class PowerOutletDisconnectView(PermissionRequiredMixin, View):
     permission_required = 'dcim.change_poweroutlet'
+<<<<<<< HEAD
 
     def get(self, request, pk):
 
@@ -1560,6 +1611,28 @@ class PowerOutletDisconnectView(PermissionRequiredMixin, View):
 
     def post(self, request, pk):
 
+=======
+
+    def get(self, request, pk):
+
+        poweroutlet = get_object_or_404(PowerOutlet, pk=pk)
+        form = ConfirmationForm()
+
+        if not hasattr(poweroutlet, 'connected_port'):
+            messages.warning(
+                request, "Cannot disconnect power outlet {}: Nothing is connected to it.".format(poweroutlet)
+            )
+            return redirect('dcim:device', pk=poweroutlet.device.pk)
+
+        return render(request, 'dcim/poweroutlet_disconnect.html', {
+            'poweroutlet': poweroutlet,
+            'form': form,
+            'return_url': reverse('dcim:device', kwargs={'pk': poweroutlet.device.pk}),
+        })
+
+    def post(self, request, pk):
+
+>>>>>>> v2.3.2
         poweroutlet = get_object_or_404(PowerOutlet, pk=pk)
         form = ConfirmationForm(request.POST)
 
@@ -1645,6 +1718,15 @@ class InterfaceEditView(PermissionRequiredMixin, ObjectEditView):
     template_name = 'dcim/interface_edit.html'
 
 
+<<<<<<< HEAD
+=======
+class InterfaceAssignVLANsView(PermissionRequiredMixin, ObjectEditView):
+    permission_required = 'dcim.change_interface'
+    model = Interface
+    model_form = forms.InterfaceAssignVLANsForm
+
+
+>>>>>>> v2.3.2
 class InterfaceDeleteView(PermissionRequiredMixin, ObjectDeleteView):
     permission_required = 'dcim.delete_interface'
     model = Interface
@@ -1710,6 +1792,7 @@ class DeviceBayDeleteView(PermissionRequiredMixin, ObjectDeleteView):
 
 class DeviceBayPopulateView(PermissionRequiredMixin, View):
     permission_required = 'dcim.change_devicebay'
+<<<<<<< HEAD
 
     def get(self, request, pk):
 
@@ -1722,6 +1805,20 @@ class DeviceBayPopulateView(PermissionRequiredMixin, View):
             'return_url': reverse('dcim:device', kwargs={'pk': device_bay.device.pk}),
         })
 
+=======
+
+    def get(self, request, pk):
+
+        device_bay = get_object_or_404(DeviceBay, pk=pk)
+        form = forms.PopulateDeviceBayForm(device_bay)
+
+        return render(request, 'dcim/devicebay_populate.html', {
+            'device_bay': device_bay,
+            'form': form,
+            'return_url': reverse('dcim:device', kwargs={'pk': device_bay.device.pk}),
+        })
+
+>>>>>>> v2.3.2
     def post(self, request, pk):
 
         device_bay = get_object_or_404(DeviceBay, pk=pk)
@@ -1740,6 +1837,7 @@ class DeviceBayPopulateView(PermissionRequiredMixin, View):
             'form': form,
             'return_url': reverse('dcim:device', kwargs={'pk': device_bay.device.pk}),
         })
+<<<<<<< HEAD
 
 
 class DeviceBayDepopulateView(PermissionRequiredMixin, View):
@@ -1758,6 +1856,26 @@ class DeviceBayDepopulateView(PermissionRequiredMixin, View):
 
     def post(self, request, pk):
 
+=======
+
+
+class DeviceBayDepopulateView(PermissionRequiredMixin, View):
+    permission_required = 'dcim.change_devicebay'
+
+    def get(self, request, pk):
+
+        device_bay = get_object_or_404(DeviceBay, pk=pk)
+        form = ConfirmationForm()
+
+        return render(request, 'dcim/devicebay_depopulate.html', {
+            'device_bay': device_bay,
+            'form': form,
+            'return_url': reverse('dcim:device', kwargs={'pk': device_bay.device.pk}),
+        })
+
+    def post(self, request, pk):
+
+>>>>>>> v2.3.2
         device_bay = get_object_or_404(DeviceBay, pk=pk)
         form = ConfirmationForm(request.POST)
 
@@ -1775,8 +1893,13 @@ class DeviceBayDepopulateView(PermissionRequiredMixin, View):
             'form': form,
             'return_url': reverse('dcim:device', kwargs={'pk': device_bay.device.pk}),
         })
+<<<<<<< HEAD
 
 
+=======
+
+
+>>>>>>> v2.3.2
 class DeviceBayBulkRenameView(PermissionRequiredMixin, BulkRenameView):
     permission_required = 'dcim.change_devicebay'
     model = DeviceBay
@@ -1925,6 +2048,7 @@ class InterfaceConnectionAddView(PermissionRequiredMixin, GetReturnURLMixin, Vie
 class InterfaceConnectionDeleteView(PermissionRequiredMixin, GetReturnURLMixin, View):
     permission_required = 'dcim.delete_interfaceconnection'
     default_return_url = 'dcim:device_list'
+<<<<<<< HEAD
 
     def get(self, request, pk):
 
@@ -1940,6 +2064,23 @@ class InterfaceConnectionDeleteView(PermissionRequiredMixin, GetReturnURLMixin, 
     def post(self, request, pk):
 
         interfaceconnection = get_object_or_404(InterfaceConnection, pk=pk)
+=======
+
+    def get(self, request, pk):
+
+        interfaceconnection = get_object_or_404(InterfaceConnection, pk=pk)
+        form = forms.ConfirmationForm()
+
+        return render(request, 'dcim/interfaceconnection_delete.html', {
+            'interfaceconnection': interfaceconnection,
+            'form': form,
+            'return_url': self.get_return_url(request, interfaceconnection),
+        })
+
+    def post(self, request, pk):
+
+        interfaceconnection = get_object_or_404(InterfaceConnection, pk=pk)
+>>>>>>> v2.3.2
         form = forms.ConfirmationForm(request.POST)
 
         if form.is_valid():
@@ -2082,11 +2223,17 @@ class VirtualChassisCreateView(PermissionRequiredMixin, View):
         # Get the list of devices being added to a VirtualChassis
         pk_form = forms.DeviceSelectionForm(request.POST)
         pk_form.full_clean()
+<<<<<<< HEAD
 
         if not pk_form.cleaned_data.get('pk'):
             messages.warning(request, "No devices were selected.")
             return redirect('dcim:device_list')
 
+=======
+        if not pk_form.cleaned_data.get('pk'):
+            messages.warning(request, "No devices were selected.")
+            return redirect('dcim:device_list')
+>>>>>>> v2.3.2
         device_queryset = Device.objects.filter(
             pk__in=pk_form.cleaned_data.get('pk')
         ).select_related('rack').order_by('vc_position')
@@ -2228,7 +2375,11 @@ class VirtualChassisAddMemberView(PermissionRequiredMixin, GetReturnURLMixin, Vi
             device = member_select_form.cleaned_data['device']
             device.virtual_chassis = virtual_chassis
             data = {k: request.POST[k] for k in ['vc_position', 'vc_priority']}
+<<<<<<< HEAD
             membership_form = forms.DeviceVCMembershipForm(data, validate_vc_position=True, instance=device)
+=======
+            membership_form = forms.DeviceVCMembershipForm(data=data, validate_vc_position=True, instance=device)
+>>>>>>> v2.3.2
 
             if membership_form.is_valid():
 
@@ -2244,7 +2395,11 @@ class VirtualChassisAddMemberView(PermissionRequiredMixin, GetReturnURLMixin, Vi
 
         else:
 
+<<<<<<< HEAD
             membership_form = forms.DeviceVCMembershipForm(request.POST)
+=======
+            membership_form = forms.DeviceVCMembershipForm(data=request.POST)
+>>>>>>> v2.3.2
 
         return render(request, 'dcim/virtualchassis_add_member.html', {
             'virtual_chassis': virtual_chassis,

@@ -99,7 +99,9 @@ class Circuit(CreatedUpdatedModel, CustomFieldModel):
     comments = models.TextField(blank=True)
     custom_field_values = GenericRelation(CustomFieldValue, content_type_field='obj_type', object_id_field='obj_id')
 
-    csv_headers = ['cid', 'provider', 'type', 'status', 'tenant', 'package', 'install_date', 'commit_rate', 'description', 'comments']
+    csv_headers = [
+        'cid', 'provider', 'type', 'status', 'tenant', 'package', 'install_date', 'commit_rate', 'description', 'comments'
+    ]
 
     class Meta:
         ordering = ['provider', 'cid']
