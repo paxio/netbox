@@ -718,7 +718,6 @@ class PlatformCSVForm(forms.ModelForm):
         fields = Platform.csv_headers
         help_texts = {
             'name': 'Platform name',
-            'manufacturer': 'Manufacturer name',
         }
 
 
@@ -1047,22 +1046,9 @@ class DeviceBulkEditForm(BootstrapMixin, CustomFieldBulkEditForm):
     platform = forms.ModelChoiceField(queryset=Platform.objects.all(), required=False)
     status = forms.ChoiceField(choices=add_blank_choice(DEVICE_STATUS_CHOICES), required=False, initial='')
     serial = forms.CharField(max_length=50, required=False, label='Serial Number')
-    site = forms.ModelChoiceField(queryset=Site.objects.all(), required=False, label='Site')
-    rack = forms.ModelChoiceField(queryset=Rack.objects.all(), required=False, label='Rack')
-    face = forms.ChoiceField(choices=add_blank_choice(RACK_FACE_CHOICES), required=False, initial='')
-    position = forms.TypedChoiceField(
-        required=False,
-        empty_value=None,
-        help_text="The lowest-numbered unit occupied by the device",
-        widget=APISelect(
-            api_url='/api/dcim/racks/{{rack}}/units/?face={{face}}',
-            disabled_indicator='device'
-        ),
-        label='Position'
-    )
 
     class Meta:
-        nullable_fields = ['tenant', 'platform', 'serial', 'rack', 'face', 'position']
+        nullable_fields = ['tenant', 'platform', 'serial']
 
 
 class DeviceFilterForm(BootstrapMixin, CustomFieldFilterForm):
@@ -1836,41 +1822,8 @@ class InterfaceCreateForm(ComponentForm, forms.Form):
         else:
             self.fields['lag'].queryset = Interface.objects.none()
 
-        # Limit the queryset for the site to only include the interface's device's site
-        if self.parent is not None and self.parent.site:
-            self.fields['site'].queryset = Site.objects.filter(pk=self.parent.site.id)
-            self.fields['site'].initial = None
-        else:
-            self.fields['site'].queryset = Site.objects.none()
-            self.fields['site'].initial = None
 
-        # Limit the initial vlan choices
-        if self.is_bound and self.data.get('vlan_group') and self.data.get('site'):
-            filter_dict = {
-                'group_id': self.data.get('vlan_group'),
-                'site_id': self.data.get('site'),
-            }
-        elif self.initial.get('untagged_vlan'):
-            filter_dict = {
-                'group_id': self.untagged_vlan.group,
-                'site_id': self.untagged_vlan.site,
-            }
-        elif self.initial.get('tagged_vlans'):
-            filter_dict = {
-                'group_id': self.tagged_vlans.first().group,
-                'site_id': self.tagged_vlans.first().site,
-            }
-        else:
-            filter_dict = {
-                'group_id': None,
-                'site_id': None,
-            }
-
-        self.fields['untagged_vlan'].queryset = VLAN.objects.filter(**filter_dict)
-        self.fields['tagged_vlans'].queryset = VLAN.objects.filter(**filter_dict)
-
-
-class InterfaceBulkEditForm(BootstrapMixin, BulkEditForm, ChainedFieldsMixin):
+class InterfaceBulkEditForm(BootstrapMixin, BulkEditForm):
     pk = forms.ModelMultipleChoiceField(queryset=Interface.objects.all(), widget=forms.MultipleHiddenInput)
     form_factor = forms.ChoiceField(choices=add_blank_choice(IFACE_FF_CHOICES), required=False)
     enabled = forms.NullBooleanField(required=False, widget=BulkEditNullBooleanSelect)
@@ -1895,32 +1848,6 @@ class InterfaceBulkEditForm(BootstrapMixin, BulkEditForm, ChainedFieldsMixin):
             )
         else:
             self.fields['lag'].choices = []
-
-        # Limit the queryset for the site to only include the interface's device's site
-        if device and device.site:
-            self.fields['site'].queryset = Site.objects.filter(pk=device.site.id)
-            self.fields['site'].initial = None
-        else:
-            self.fields['site'].queryset = Site.objects.none()
-            self.fields['site'].initial = None
-
-        if self.is_bound and self.data.get('vlan_group') and self.data.get('site'):
-            filter_dict = {
-                'group_id': self.data.get('vlan_group'),
-                'site_id': self.data.get('site'),
-            }
-        else:
-            filter_dict = {
-                'group_id': None,
-                'site_id': None,
-            }
-
-        self.fields['untagged_vlan'].queryset = VLAN.objects.filter(**filter_dict)
-        self.fields['tagged_vlans'].queryset = VLAN.objects.filter(**filter_dict)
-
-
-class InterfaceBulkRenameForm(BulkRenameForm):
-    pk = forms.ModelMultipleChoiceField(queryset=Interface.objects.all(), widget=forms.MultipleHiddenInput)
 
 
 class InterfaceBulkRenameForm(BulkRenameForm):
