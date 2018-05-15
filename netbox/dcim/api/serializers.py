@@ -660,10 +660,11 @@ class InterfaceCircuitTerminationSerializer(serializers.ModelSerializer):
 # Cannot import ipam.api.NestedVLANSerializer due to circular dependency
 class InterfaceVLANSerializer(serializers.ModelSerializer):
     url = serializers.HyperlinkedIdentityField(view_name='ipam-api:vlan-detail')
+    group = NestedVLANGroupSerializer()
 
     class Meta:
         model = VLAN
-        fields = ['id', 'url', 'vid', 'name', 'display_name']
+        fields = ['id', 'url', 'vid', 'name', 'display_name', 'group']
 
 
 class InterfaceSerializer(serializers.ModelSerializer):
