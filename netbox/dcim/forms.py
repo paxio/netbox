@@ -38,7 +38,8 @@ DEVICE_BY_PK_RE = '{\d+\}'
 
 INTERFACE_MODE_HELP_TEXT = """
 Access: One untagged VLAN<br />
-Tagged: One untagged VLAN and/or one or more tagged VLANs<br />
+Tagged: Customer supplies inner vlan tag. We apply the site vlan tag (outer)<br />
+Double Tagged: We apply both the inner and outer vlan tags<br />
 Tagged All: Implies all VLANs are available (w/optional untagged VLAN)
 """
 
