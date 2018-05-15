@@ -17,7 +17,7 @@ from dcim.models import (
     RackReservation, RackRole, Region, Site, VirtualChassis,
 )
 from extras.api.customfields import CustomFieldModelSerializer
-from ipam.models import IPAddress, VLAN
+from ipam.models import IPAddress, VLAN, VLANGroup
 from tenancy.api.serializers import NestedTenantSerializer
 from users.api.serializers import NestedUserSerializer
 from utilities.api import ChoiceFieldSerializer, TimeZoneField, ValidatedModelSerializer
