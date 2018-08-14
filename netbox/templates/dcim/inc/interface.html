@@ -1,3 +1,5 @@
+{% load helpers %}
+
 <tr class="interface{% if not iface.enabled %} danger{% elif iface.connection and iface.connection.connection_status or iface.circuit_termination %} success{% elif iface.connection and not iface.connection.connection_status %} info{% elif iface.is_virtual %} warning{% endif %}" id="iface_{{ iface.name }}">
 
     {# Checkbox #}
@@ -30,6 +32,20 @@
 
     {# MAC address #}
     <td>{{ iface.mac_address|default:"" }}</td>
+
+    {# Interface VLAN mode #}
+    <td>{% if iface.mode is None or iface.mode == 100 %}
+        Access
+    {% elif iface.mode == 200 %}
+        Tagged
+    {% elif iface.mode == 300 %}
+        Tagged All
+    {% elif iface.mode == 400 %}
+        Double Tagged
+    {% endif %}</td>
+
+    {# VLANs #}
+    <td>{{ iface.tagged_vlans.all|humanize_vlans }}</td>
 
     {# Connection or type #}
     {% if iface.is_lag %}
@@ -138,7 +154,7 @@
         {% endif %}
 
         {# IP address #}
-        <td colspan="2">
+        <td colspan="3">
             <a href="{% url 'ipam:ipaddress' pk=ip.pk %}">{{ ip }}</a>
         </td>
 
@@ -163,7 +179,7 @@
         </td>
 
         {# Description #}
-        <td colspan="2">
+        <td colspan="3">
             {{ ip.description }}
         </td>
 

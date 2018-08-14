@@ -101,6 +101,36 @@ def humanize_speed(speed):
 
 
 @register.filter()
+def humanize_vlans(vlans):
+    def print_sequence(lowest, end):
+        return "%s-%s" % (lowest, end)
+
+    out = []
+    lowest = 5000
+    previous = 0
+    sequence = False
+    vlans = sorted([int(v.vid) for v in vlans])
+
+    for i in vlans:
+        if (int(i)-1) == int(previous):
+            if int(previous) < int(lowest):
+                lowest = previous
+            sequence = True
+        else:
+            if sequence:
+                out.append(print_sequence(lowest, previous))
+                lowest = 5000
+            elif previous != 0 and not sequence:
+                out.append(previous)
+            sequence = False
+        previous = i
+
+    if sequence:
+        out.append(print_sequence(lowest, previous))
+
+    return ", ".join(out)
+
+@register.filter()
 def example_choices(field, arg=3):
     """
     Returns a number (default: 3) of example choices for a ChoiceFiled (useful for CSV import forms).
