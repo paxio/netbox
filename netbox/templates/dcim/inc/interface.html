@@ -30,19 +30,19 @@
     {# MTU #}
     <td>{{ iface.mtu|default:"" }}</td>
 
-    {# Interface VLAN mode #}
-    <td>{% if iface.mode is None or iface.mode == 100 %}
-        Access
-    {% elif iface.mode == 200 %}
-        Tagged
-    {% elif iface.mode == 300 %}
-        Tagged All
-    {% elif iface.mode == 400 %}
-        Double Tagged
-    {% endif %}</td>
-
     {# VLANs #}
-    <td>{{ iface.tagged_vlans.all|humanize_vlans }}</td>
+    <td>
+    {% if iface.mode == 100  %}
+        A
+    {% elif iface.mode == 200 %}
+        T
+    {% elif iface.mode == 300 %}
+        TA
+    {% elif iface.mode == 400 %}
+        DT
+    {% endif %}
+
+    {{ iface.tagged_vlans.all|humanize_vlans }}</td>
 
     {# Connection or type #}
     {% if iface.is_lag %}
@@ -176,7 +176,7 @@
         </td>
 
         {# Description #}
-        <td colspan="3">
+        <td colspan="2">
             {{ ip.description }}
         </td>
 
