@@ -30,9 +30,6 @@
     {# MTU #}
     <td>{{ iface.mtu|default:"" }}</td>
 
-    {# MAC address #}
-    <td>{{ iface.mac_address|default:"" }}</td>
-
     {# Interface VLAN mode #}
     <td>{% if iface.mode is None or iface.mode == 100 %}
         Access
@@ -154,7 +151,7 @@
         {% endif %}
 
         {# IP address #}
-        <td colspan="3">
+        <td colspan="2">
             <a href="{% url 'ipam:ipaddress' pk=ip.pk %}">{{ ip }}</a>
         </td>
 
