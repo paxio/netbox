@@ -882,7 +882,7 @@ class DeviceView(View):
             device.device_type.interface_ordering
         ).select_related(
             'connected_as_a__interface_b__device', 'connected_as_b__interface_a__device',
-            'circuit_termination__circuit'
+            'circuit_termination__circuit', 'untagged_vlan'
         ).prefetch_related('ip_addresses', 'tagged_vlans')
 
         # Device bays
