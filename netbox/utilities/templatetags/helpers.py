@@ -99,7 +99,6 @@ def humanize_speed(speed):
     else:
         return '{} Kbps'.format(speed)
 
-
 @register.filter()
 def humanize_vlans(vlans):
     def print_sequence(lowest, end):
@@ -111,26 +110,27 @@ def humanize_vlans(vlans):
     sequence = False
     vlans = sorted([int(v.vid) for v in vlans])
 
+    if len(vlans) == 1:
+        return vlans[0]
+
     for i in vlans:
-        if (int(i)-1) == previous:
+        if (i-1) == previous:
             if previous < lowest:
                 lowest = previous
             sequence = True
         else:
             if sequence:
                 out.append(print_sequence(lowest, previous))
-                lowest = 9000
+                lowest = 4097
             elif previous != '' and not sequence:
-                out.append(previous)
-            elif previous == '' and len(vlans) == 1:
-                out.append(i)
+                out.append(str(previous))
             sequence = False
         previous = i
 
     if sequence:
         out.append(print_sequence(lowest, previous))
 
-    return ", ".join(out)
+    return ', '.join(out)
 
 @register.filter()
 def example_choices(field, arg=3):
