@@ -106,22 +106,24 @@ def humanize_vlans(vlans):
         return "%s-%s" % (lowest, end)
 
     out = []
-    lowest = 5000
-    previous = 0
+    lowest = 4097
+    previous = ''
     sequence = False
     vlans = sorted([int(v.vid) for v in vlans])
 
     for i in vlans:
-        if (int(i)-1) == int(previous):
-            if int(previous) < int(lowest):
+        if (int(i)-1) == previous:
+            if previous < lowest:
                 lowest = previous
             sequence = True
         else:
             if sequence:
                 out.append(print_sequence(lowest, previous))
-                lowest = 5000
-            elif previous != 0 and not sequence:
+                lowest = 9000
+            elif previous != '' and not sequence:
                 out.append(previous)
+            elif previous == '' and len(vlans) == 1:
+                out.append(i)
             sequence = False
         previous = i
 
