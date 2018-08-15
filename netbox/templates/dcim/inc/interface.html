@@ -33,7 +33,7 @@
     {# VLANs #}
     <td>
     {% if iface.mode == 100  %}
-        A {{ iface.untagged_vlan_id }}
+        A {{ iface.untagged_vlan.vid }}
     {% elif iface.mode == 200 %}
         T
     {% elif iface.mode == 300 %}
