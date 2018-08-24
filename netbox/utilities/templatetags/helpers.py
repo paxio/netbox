@@ -6,6 +6,8 @@ import pytz
 from django import template
 from django.utils.safestring import mark_safe
 from markdown import markdown
+from operator import itemgetter
+from itertools import groupby
 
 register = template.Library()
 
@@ -104,33 +106,18 @@ def humanize_vlans(vlans):
     def print_sequence(lowest, end):
         return "%s-%s" % (lowest, end)
 
-    out = []
-    lowest = 4097
-    previous = ''
-    sequence = False
-    vlans = sorted([int(v.vid) for v in vlans])
+    v = [int(d.vid) for d in vlans]
+    ranges = []
 
-    if len(vlans) == 1:
-        return vlans[0]
-
-    for i in vlans:
-        if (i-1) == previous:
-            if previous < lowest:
-                lowest = previous
-            sequence = True
+    for key, g in groupby(enumerate(v), lambda x:x[0]-x[1]):
+        group = (map(itemgetter(1),g))
+        group = list(map(int,group))
+        if len(group) > 1:
+            ranges.append(print_sequence(group[0], group[-1]))
         else:
-            if sequence:
-                out.append(print_sequence(lowest, previous))
-                lowest = 4097
-            elif previous != '' and not sequence:
-                out.append(str(previous))
-            sequence = False
-        previous = i
+            ranges.append(str(group[0]))
 
-    if sequence:
-        out.append(print_sequence(lowest, previous))
-
-    return ', '.join(out)
+    return ', '.join(ranges)
 
 @register.filter()
 def example_choices(field, arg=3):
