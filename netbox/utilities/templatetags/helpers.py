@@ -106,7 +106,7 @@ def humanize_vlans(vlans):
     def print_sequence(lowest, end):
         return "%s-%s" % (lowest, end)
 
-    v = [int(d.vid) for d in vlans]
+    v = sorted([int(d.vid) for d in vlans])
     ranges = []
 
     for key, g in groupby(enumerate(v), lambda x:x[0]-x[1]):
