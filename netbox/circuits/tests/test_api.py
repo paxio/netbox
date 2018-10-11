@@ -1,26 +1,21 @@
 from __future__ import unicode_literals
 
-from django.contrib.auth.models import User
 from django.urls import reverse
 from rest_framework import status
-from rest_framework.test import APITestCase
 
-from circuits.constants import TERM_SIDE_A, TERM_SIDE_Z
+from circuits.constants import CIRCUIT_STATUS_ACTIVE, TERM_SIDE_A, TERM_SIDE_Z
 from circuits.models import Circuit, CircuitTermination, CircuitType, Provider
 from dcim.models import Site
 from extras.constants import GRAPH_TYPE_PROVIDER
 from extras.models import Graph
-from users.models import Token
-from utilities.tests import HttpStatusMixin
+from utilities.testing import APITestCase
 
 
-class ProviderTest(HttpStatusMixin, APITestCase):
+class ProviderTest(APITestCase):
 
     def setUp(self):
 
-        user = User.objects.create(username='testuser', is_superuser=True)
-        token = Token.objects.create(user=user)
-        self.header = {'HTTP_AUTHORIZATION': 'Token {}'.format(token.key)}
+        super(ProviderTest, self).setUp()
 
         self.provider1 = Provider.objects.create(name='Test Provider 1', slug='test-provider-1')
         self.provider2 = Provider.objects.create(name='Test Provider 2', slug='test-provider-2')
@@ -60,6 +55,16 @@ class ProviderTest(HttpStatusMixin, APITestCase):
         response = self.client.get(url, **self.header)
 
         self.assertEqual(response.data['count'], 3)
+
+    def test_list_providers_brief(self):
+
+        url = reverse('circuits-api:provider-list')
+        response = self.client.get('{}?brief=1'.format(url), **self.header)
+
+        self.assertEqual(
+            sorted(response.data['results'][0]),
+            ['id', 'name', 'slug', 'url']
+        )
 
     def test_create_provider(self):
 
@@ -128,13 +133,11 @@ class ProviderTest(HttpStatusMixin, APITestCase):
         self.assertEqual(Provider.objects.count(), 2)
 
 
-class CircuitTypeTest(HttpStatusMixin, APITestCase):
+class CircuitTypeTest(APITestCase):
 
     def setUp(self):
 
-        user = User.objects.create(username='testuser', is_superuser=True)
-        token = Token.objects.create(user=user)
-        self.header = {'HTTP_AUTHORIZATION': 'Token {}'.format(token.key)}
+        super(CircuitTypeTest, self).setUp()
 
         self.circuittype1 = CircuitType.objects.create(name='Test Circuit Type 1', slug='test-circuit-type-1')
         self.circuittype2 = CircuitType.objects.create(name='Test Circuit Type 2', slug='test-circuit-type-2')
@@ -153,6 +156,16 @@ class CircuitTypeTest(HttpStatusMixin, APITestCase):
         response = self.client.get(url, **self.header)
 
         self.assertEqual(response.data['count'], 3)
+
+    def test_list_circuittypes_brief(self):
+
+        url = reverse('circuits-api:circuittype-list')
+        response = self.client.get('{}?brief=1'.format(url), **self.header)
+
+        self.assertEqual(
+            sorted(response.data['results'][0]),
+            ['id', 'name', 'slug', 'url']
+        )
 
     def test_create_circuittype(self):
 
@@ -195,13 +208,11 @@ class CircuitTypeTest(HttpStatusMixin, APITestCase):
         self.assertEqual(CircuitType.objects.count(), 2)
 
 
-class CircuitTest(HttpStatusMixin, APITestCase):
+class CircuitTest(APITestCase):
 
     def setUp(self):
 
-        user = User.objects.create(username='testuser', is_superuser=True)
-        token = Token.objects.create(user=user)
-        self.header = {'HTTP_AUTHORIZATION': 'Token {}'.format(token.key)}
+        super(CircuitTest, self).setUp()
 
         self.provider1 = Provider.objects.create(name='Test Provider 1', slug='test-provider-1')
         self.provider2 = Provider.objects.create(name='Test Provider 2', slug='test-provider-2')
@@ -225,12 +236,23 @@ class CircuitTest(HttpStatusMixin, APITestCase):
 
         self.assertEqual(response.data['count'], 3)
 
+    def test_list_circuits_brief(self):
+
+        url = reverse('circuits-api:circuit-list')
+        response = self.client.get('{}?brief=1'.format(url), **self.header)
+
+        self.assertEqual(
+            sorted(response.data['results'][0]),
+            ['cid', 'id', 'url']
+        )
+
     def test_create_circuit(self):
 
         data = {
             'cid': 'TEST0004',
             'provider': self.provider1.pk,
             'type': self.circuittype1.pk,
+            'status': CIRCUIT_STATUS_ACTIVE,
         }
 
         url = reverse('circuits-api:circuit-list')
@@ -250,16 +272,19 @@ class CircuitTest(HttpStatusMixin, APITestCase):
                 'cid': 'TEST0004',
                 'provider': self.provider1.pk,
                 'type': self.circuittype1.pk,
+                'status': CIRCUIT_STATUS_ACTIVE,
             },
             {
                 'cid': 'TEST0005',
                 'provider': self.provider1.pk,
                 'type': self.circuittype1.pk,
+                'status': CIRCUIT_STATUS_ACTIVE,
             },
             {
                 'cid': 'TEST0006',
                 'provider': self.provider1.pk,
                 'type': self.circuittype1.pk,
+                'status': CIRCUIT_STATUS_ACTIVE,
             },
         ]
 
@@ -299,13 +324,11 @@ class CircuitTest(HttpStatusMixin, APITestCase):
         self.assertEqual(Circuit.objects.count(), 2)
 
 
-class CircuitTerminationTest(HttpStatusMixin, APITestCase):
+class CircuitTerminationTest(APITestCase):
 
     def setUp(self):
 
-        user = User.objects.create(username='testuser', is_superuser=True)
-        token = Token.objects.create(user=user)
-        self.header = {'HTTP_AUTHORIZATION': 'Token {}'.format(token.key)}
+        super(CircuitTerminationTest, self).setUp()
 
         provider = Provider.objects.create(name='Test Provider', slug='test-provider')
         circuittype = CircuitType.objects.create(name='Test Circuit Type', slug='test-circuit-type')

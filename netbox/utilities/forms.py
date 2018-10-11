@@ -2,10 +2,13 @@ from __future__ import unicode_literals
 
 import csv
 from io import StringIO
+import json
 import re
+import sys
 
 from django import forms
 from django.conf import settings
+from django.contrib.postgres.forms.jsonb import JSONField as _JSONField, InvalidJSONInput
 from django.db.models import Count
 from django.urls import reverse_lazy
 from mptt.forms import TreeNodeMultipleChoiceField
@@ -38,10 +41,10 @@ COLOR_CHOICES = (
     ('607d8b', 'Dark grey'),
     ('111111', 'Black'),
 )
-NUMERIC_EXPANSION_PATTERN = '\[((?:\d+[?:,-])+\d+)\]'
-ALPHANUMERIC_EXPANSION_PATTERN = '\[((?:[a-zA-Z0-9]+[?:,-])+[a-zA-Z0-9]+)\]'
-IP4_EXPANSION_PATTERN = '\[((?:[0-9]{1,3}[?:,-])+[0-9]{1,3})\]'
-IP6_EXPANSION_PATTERN = '\[((?:[0-9a-f]{1,4}[?:,-])+[0-9a-f]{1,4})\]'
+NUMERIC_EXPANSION_PATTERN = r'\[((?:\d+[?:,-])+\d+)\]'
+ALPHANUMERIC_EXPANSION_PATTERN = r'\[((?:[a-zA-Z0-9]+[?:,-])+[a-zA-Z0-9]+)\]'
+IP4_EXPANSION_PATTERN = r'\[((?:[0-9]{1,3}[?:,-])+[0-9]{1,3})\]'
+IP6_EXPANSION_PATTERN = r'\[((?:[0-9a-f]{1,4}[?:,-])+[0-9a-f]{1,4})\]'
 
 
 def parse_numeric_range(string, base=10):
@@ -148,11 +151,19 @@ def add_blank_choice(choices):
     return ((None, '---------'),) + tuple(choices)
 
 
+def utf8_encoder(data):
+    for line in data:
+        yield line.encode('utf-8')
+
+
 #
 # Widgets
 #
 
 class SmallTextarea(forms.Textarea):
+    """
+    Subclass used for rendering a smaller textarea element.
+    """
     pass
 
 
@@ -168,6 +179,9 @@ class ColorSelect(forms.Select):
 
 
 class BulkEditNullBooleanSelect(forms.NullBooleanSelect):
+    """
+    A Select widget for NullBooleanFields
+    """
 
     def __init__(self, *args, **kwargs):
         super(BulkEditNullBooleanSelect, self).__init__(*args, **kwargs)
@@ -205,7 +219,8 @@ class ArrayFieldSelectMultiple(SelectWithDisabled, forms.SelectMultiple):
 
     def optgroups(self, name, value, attrs=None):
         # Split the delimited string of values into a list
-        value = value[0].split(self.delimiter)
+        if value:
+            value = value[0].split(self.delimiter)
         return super(ArrayFieldSelectMultiple, self).optgroups(name, value, attrs)
 
     def value_from_datadict(self, data, files, name):
@@ -294,7 +309,12 @@ class CSVDataField(forms.CharField):
     def to_python(self, value):
 
         records = []
-        reader = csv.reader(StringIO(value))
+
+        # Python 2 hack for Unicode support in the CSV reader
+        if sys.version_info[0] < 3:
+            reader = csv.reader(utf8_encoder(StringIO(value)))
+        else:
+            reader = csv.reader(StringIO(value))
 
         # Consume and validate the first line of CSV data as column headers
         headers = next(reader)
@@ -325,7 +345,7 @@ class CSVChoiceField(forms.ChoiceField):
     """
 
     def __init__(self, choices, *args, **kwargs):
-        super(CSVChoiceField, self).__init__(choices, *args, **kwargs)
+        super(CSVChoiceField, self).__init__(choices=choices, *args, **kwargs)
         self.choices = [(label, label) for value, label in choices]
         self.choice_values = {label: value for value, label in choices}
 
@@ -406,7 +426,7 @@ class FlexibleModelChoiceField(forms.ModelChoiceField):
         try:
             if not self.to_field_name:
                 key = 'pk'
-            elif re.match('^\{\d+\}$', value):
+            elif re.match(r'^\{\d+\}$', value):
                 key = 'pk'
                 value = value.strip('{}')
             else:
@@ -446,7 +466,9 @@ class ChainedModelMultipleChoiceField(forms.ModelMultipleChoiceField):
 
 
 class SlugField(forms.SlugField):
-
+    """
+    Extend the built-in SlugField to automatically populate from a field called `name` unless otherwise specified.
+    """
     def __init__(self, slug_source='name', *args, **kwargs):
         label = kwargs.pop('label', "Slug")
         help_text = kwargs.pop('help_text', "URL-friendly unique shorthand")
@@ -535,16 +557,38 @@ class LaxURLField(forms.URLField):
     default_validators = [EnhancedURLValidator()]
 
 
+class JSONField(_JSONField):
+    """
+    Custom wrapper around Django's built-in JSONField to avoid presenting "null" as the default text.
+    """
+    def __init__(self, *args, **kwargs):
+        super(JSONField, self).__init__(*args, **kwargs)
+        if not self.help_text:
+            self.help_text = 'Enter context data in <a href="https://json.org/">JSON</a> format.'
+            self.widget.attrs['placeholder'] = ''
+
+    def prepare_value(self, value):
+        if isinstance(value, InvalidJSONInput):
+            return value
+        if value is None:
+            return ''
+        return json.dumps(value, sort_keys=True, indent=4)
+
+
 #
 # Forms
 #
 
 class BootstrapMixin(forms.BaseForm):
-
+    """
+    Add the base Bootstrap CSS classes to form elements.
+    """
     def __init__(self, *args, **kwargs):
         super(BootstrapMixin, self).__init__(*args, **kwargs)
 
-        exempt_widgets = [forms.CheckboxInput, forms.ClearableFileInput, forms.FileInput, forms.RadioSelect]
+        exempt_widgets = [
+            forms.CheckboxInput, forms.ClearableFileInput, forms.FileInput, forms.RadioSelect
+        ]
 
         for field_name, field in self.fields.items():
             if field.widget.__class__ not in exempt_widgets:
@@ -614,14 +658,15 @@ class ComponentForm(BootstrapMixin, forms.Form):
 
 
 class BulkEditForm(forms.Form):
-
+    """
+    Base form for editing multiple objects in bulk
+    """
     def __init__(self, model, parent_obj=None, *args, **kwargs):
         super(BulkEditForm, self).__init__(*args, **kwargs)
         self.model = model
         self.parent_obj = parent_obj
+        self.nullable_fields = []
 
         # Copy any nullable fields defined in Meta
         if hasattr(self.Meta, 'nullable_fields'):
-            self.nullable_fields = [field for field in self.Meta.nullable_fields]
-        else:
-            self.nullable_fields = []
+            self.nullable_fields = self.Meta.nullable_fields

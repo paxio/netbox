@@ -9,13 +9,12 @@ class EnhancedURLValidator(URLValidator):
     """
     Extends Django's built-in URLValidator to permit the use of hostnames with no domain extension.
     """
-
     class AnyURLScheme(object):
         """
         A fake URL list which "contains" all scheme names abiding by the syntax defined in RFC 3986 section 3.1
         """
         def __contains__(self, item):
-            if not item or not re.match('^[a-z][0-9a-z+\-.]*$', item.lower()):
+            if not item or not re.match(r'^[a-z][0-9a-z+\-.]*$', item.lower()):
                 return False
             return True
 

@@ -13,8 +13,10 @@ OBJ_TYPE_CHOICES = (
     ('DCIM', (
         ('site', 'Sites'),
         ('rack', 'Racks'),
+        ('rackgroup', 'Rack Groups'),
         ('devicetype', 'Device types'),
         ('device', 'Devices'),
+        ('virtualchassis', 'Virtual Chassis'),
     )),
     ('IPAM', (
         ('vrf', 'VRFs'),

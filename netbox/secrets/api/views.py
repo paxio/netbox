@@ -48,10 +48,9 @@ class SecretViewSet(ModelViewSet):
     queryset = Secret.objects.select_related(
         'device__primary_ip4', 'device__primary_ip6', 'role',
     ).prefetch_related(
-        'role__users', 'role__groups',
+        'role__users', 'role__groups', 'tags',
     )
     serializer_class = serializers.SecretSerializer
-    write_serializer_class = serializers.WritableSecretSerializer
     filter_class = filters.SecretFilter
 
     master_key = None
@@ -68,7 +67,7 @@ class SecretViewSet(ModelViewSet):
 
         super(SecretViewSet, self).initial(request, *args, **kwargs)
 
-        if request.user.is_authenticated():
+        if request.user.is_authenticated:
 
             # Read session key from HTTP cookie or header if it has been provided. The session key must be provided in
             # order to encrypt/decrypt secrets.

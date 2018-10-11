@@ -2,8 +2,9 @@ from __future__ import unicode_literals
 
 from django import forms
 from django.db.models import Count
+from taggit.forms import TagField
 
-from extras.forms import CustomFieldForm, CustomFieldBulkEditForm, CustomFieldFilterForm
+from extras.forms import AddRemoveTagsForm, CustomFieldForm, CustomFieldBulkEditForm, CustomFieldFilterForm
 from utilities.forms import (
     APISelect, BootstrapMixin, ChainedFieldsMixin, ChainedModelChoiceField, CommentField, CSVChoiceField, FilterChoiceField, SlugField, add_blank_choice
 )
@@ -42,10 +43,11 @@ class TenantGroupCSVForm(forms.ModelForm):
 class TenantForm(BootstrapMixin, CustomFieldForm):
     slug = SlugField()
     comments = CommentField()
+    tags = TagField(required=False)
 
     class Meta:
         model = Tenant
-        fields = ['name', 'slug', 'group', 'description', 'comments']
+        fields = ['name', 'slug', 'group', 'description', 'comments', 'tags']
 
 
 class TenantCSVForm(forms.ModelForm):
@@ -70,7 +72,7 @@ class TenantCSVForm(forms.ModelForm):
         }
 
 
-class TenantBulkEditForm(BootstrapMixin, CustomFieldBulkEditForm):
+class TenantBulkEditForm(BootstrapMixin, AddRemoveTagsForm, CustomFieldBulkEditForm):
     pk = forms.ModelMultipleChoiceField(queryset=Tenant.objects.all(), widget=forms.MultipleHiddenInput)
     group = forms.ModelChoiceField(queryset=TenantGroup.objects.all(), required=False)
 

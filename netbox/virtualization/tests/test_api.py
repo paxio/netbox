@@ -1,22 +1,21 @@
 from __future__ import unicode_literals
 
-from django.contrib.auth.models import User
 from django.urls import reverse
+from netaddr import IPNetwork
 from rest_framework import status
-from rest_framework.test import APITestCase
 
-from users.models import Token
-from utilities.tests import HttpStatusMixin
+from dcim.constants import IFACE_FF_VIRTUAL, IFACE_MODE_TAGGED
+from dcim.models import Interface
+from ipam.models import IPAddress, VLAN
+from utilities.testing import APITestCase
 from virtualization.models import Cluster, ClusterGroup, ClusterType, VirtualMachine
 
 
-class ClusterTypeTest(HttpStatusMixin, APITestCase):
+class ClusterTypeTest(APITestCase):
 
     def setUp(self):
 
-        user = User.objects.create(username='testuser', is_superuser=True)
-        token = Token.objects.create(user=user)
-        self.header = {'HTTP_AUTHORIZATION': 'Token {}'.format(token.key)}
+        super(ClusterTypeTest, self).setUp()
 
         self.clustertype1 = ClusterType.objects.create(name='Test Cluster Type 1', slug='test-cluster-type-1')
         self.clustertype2 = ClusterType.objects.create(name='Test Cluster Type 2', slug='test-cluster-type-2')
@@ -35,6 +34,16 @@ class ClusterTypeTest(HttpStatusMixin, APITestCase):
         response = self.client.get(url, **self.header)
 
         self.assertEqual(response.data['count'], 3)
+
+    def test_list_clustertypes_brief(self):
+
+        url = reverse('virtualization-api:clustertype-list')
+        response = self.client.get('{}?brief=1'.format(url), **self.header)
+
+        self.assertEqual(
+            sorted(response.data['results'][0]),
+            ['id', 'name', 'slug', 'url']
+        )
 
     def test_create_clustertype(self):
 
@@ -103,13 +112,11 @@ class ClusterTypeTest(HttpStatusMixin, APITestCase):
         self.assertEqual(ClusterType.objects.count(), 2)
 
 
-class ClusterGroupTest(HttpStatusMixin, APITestCase):
+class ClusterGroupTest(APITestCase):
 
     def setUp(self):
 
-        user = User.objects.create(username='testuser', is_superuser=True)
-        token = Token.objects.create(user=user)
-        self.header = {'HTTP_AUTHORIZATION': 'Token {}'.format(token.key)}
+        super(ClusterGroupTest, self).setUp()
 
         self.clustergroup1 = ClusterGroup.objects.create(name='Test Cluster Group 1', slug='test-cluster-group-1')
         self.clustergroup2 = ClusterGroup.objects.create(name='Test Cluster Group 2', slug='test-cluster-group-2')
@@ -128,6 +135,16 @@ class ClusterGroupTest(HttpStatusMixin, APITestCase):
         response = self.client.get(url, **self.header)
 
         self.assertEqual(response.data['count'], 3)
+
+    def test_list_clustergroups_brief(self):
+
+        url = reverse('virtualization-api:clustergroup-list')
+        response = self.client.get('{}?brief=1'.format(url), **self.header)
+
+        self.assertEqual(
+            sorted(response.data['results'][0]),
+            ['id', 'name', 'slug', 'url']
+        )
 
     def test_create_clustergroup(self):
 
@@ -196,13 +213,11 @@ class ClusterGroupTest(HttpStatusMixin, APITestCase):
         self.assertEqual(ClusterGroup.objects.count(), 2)
 
 
-class ClusterTest(HttpStatusMixin, APITestCase):
+class ClusterTest(APITestCase):
 
     def setUp(self):
 
-        user = User.objects.create(username='testuser', is_superuser=True)
-        token = Token.objects.create(user=user)
-        self.header = {'HTTP_AUTHORIZATION': 'Token {}'.format(token.key)}
+        super(ClusterTest, self).setUp()
 
         cluster_type = ClusterType.objects.create(name='Test Cluster Type 1', slug='test-cluster-type-1')
         cluster_group = ClusterGroup.objects.create(name='Test Cluster Group 1', slug='test-cluster-group-1')
@@ -224,6 +239,16 @@ class ClusterTest(HttpStatusMixin, APITestCase):
         response = self.client.get(url, **self.header)
 
         self.assertEqual(response.data['count'], 3)
+
+    def test_list_clusters_brief(self):
+
+        url = reverse('virtualization-api:cluster-list')
+        response = self.client.get('{}?brief=1'.format(url), **self.header)
+
+        self.assertEqual(
+            sorted(response.data['results'][0]),
+            ['id', 'name', 'url']
+        )
 
     def test_create_cluster(self):
 
@@ -301,13 +326,11 @@ class ClusterTest(HttpStatusMixin, APITestCase):
         self.assertEqual(Cluster.objects.count(), 2)
 
 
-class VirtualMachineTest(HttpStatusMixin, APITestCase):
+class VirtualMachineTest(APITestCase):
 
     def setUp(self):
 
-        user = User.objects.create(username='testuser', is_superuser=True)
-        token = Token.objects.create(user=user)
-        self.header = {'HTTP_AUTHORIZATION': 'Token {}'.format(token.key)}
+        super(VirtualMachineTest, self).setUp()
 
         cluster_type = ClusterType.objects.create(name='Test Cluster Type 1', slug='test-cluster-type-1')
         cluster_group = ClusterGroup.objects.create(name='Test Cluster Group 1', slug='test-cluster-group-1')
@@ -330,6 +353,16 @@ class VirtualMachineTest(HttpStatusMixin, APITestCase):
         response = self.client.get(url, **self.header)
 
         self.assertEqual(response.data['count'], 3)
+
+    def test_list_virtualmachines_brief(self):
+
+        url = reverse('virtualization-api:virtualmachine-list')
+        response = self.client.get('{}?brief=1'.format(url), **self.header)
+
+        self.assertEqual(
+            sorted(response.data['results'][0]),
+            ['id', 'name', 'url']
+        )
 
     def test_create_virtualmachine(self):
 
@@ -375,6 +408,10 @@ class VirtualMachineTest(HttpStatusMixin, APITestCase):
 
     def test_update_virtualmachine(self):
 
+        interface = Interface.objects.create(name='Test Interface 1', virtual_machine=self.virtualmachine1)
+        ip4_address = IPAddress.objects.create(address=IPNetwork('192.0.2.1/24'), interface=interface)
+        ip6_address = IPAddress.objects.create(address=IPNetwork('2001:db8::1/64'), interface=interface)
+
         cluster2 = Cluster.objects.create(
             name='Test Cluster 2',
             type=ClusterType.objects.first(),
@@ -383,6 +420,8 @@ class VirtualMachineTest(HttpStatusMixin, APITestCase):
         data = {
             'name': 'Test Virtual Machine X',
             'cluster': cluster2.pk,
+            'primary_ip4': ip4_address.pk,
+            'primary_ip6': ip6_address.pk,
         }
 
         url = reverse('virtualization-api:virtualmachine-detail', kwargs={'pk': self.virtualmachine1.pk})
@@ -393,6 +432,8 @@ class VirtualMachineTest(HttpStatusMixin, APITestCase):
         virtualmachine1 = VirtualMachine.objects.get(pk=response.data['id'])
         self.assertEqual(virtualmachine1.name, data['name'])
         self.assertEqual(virtualmachine1.cluster.pk, data['cluster'])
+        self.assertEqual(virtualmachine1.primary_ip4.pk, data['primary_ip4'])
+        self.assertEqual(virtualmachine1.primary_ip6.pk, data['primary_ip6'])
 
     def test_delete_virtualmachine(self):
 
@@ -401,3 +442,178 @@ class VirtualMachineTest(HttpStatusMixin, APITestCase):
 
         self.assertHttpStatus(response, status.HTTP_204_NO_CONTENT)
         self.assertEqual(VirtualMachine.objects.count(), 2)
+
+
+class InterfaceTest(APITestCase):
+
+    def setUp(self):
+
+        super(InterfaceTest, self).setUp()
+
+        clustertype = ClusterType.objects.create(name='Test Cluster Type 1', slug='test-cluster-type-1')
+        cluster = Cluster.objects.create(name='Test Cluster 1', type=clustertype)
+        self.virtualmachine = VirtualMachine.objects.create(cluster=cluster, name='Test VM 1')
+        self.interface1 = Interface.objects.create(
+            virtual_machine=self.virtualmachine,
+            name='Test Interface 1',
+            form_factor=IFACE_FF_VIRTUAL
+        )
+        self.interface2 = Interface.objects.create(
+            virtual_machine=self.virtualmachine,
+            name='Test Interface 2',
+            form_factor=IFACE_FF_VIRTUAL
+        )
+        self.interface3 = Interface.objects.create(
+            virtual_machine=self.virtualmachine,
+            name='Test Interface 3',
+            form_factor=IFACE_FF_VIRTUAL
+        )
+
+        self.vlan1 = VLAN.objects.create(name="Test VLAN 1", vid=1)
+        self.vlan2 = VLAN.objects.create(name="Test VLAN 2", vid=2)
+        self.vlan3 = VLAN.objects.create(name="Test VLAN 3", vid=3)
+
+    def test_get_interface(self):
+
+        url = reverse('virtualization-api:interface-detail', kwargs={'pk': self.interface1.pk})
+        response = self.client.get(url, **self.header)
+
+        self.assertEqual(response.data['name'], self.interface1.name)
+
+    def test_list_interfaces(self):
+
+        url = reverse('virtualization-api:interface-list')
+        response = self.client.get(url, **self.header)
+
+        self.assertEqual(response.data['count'], 3)
+
+    def test_list_interfaces_brief(self):
+
+        url = reverse('virtualization-api:interface-list')
+        response = self.client.get('{}?brief=1'.format(url), **self.header)
+
+        self.assertEqual(
+            sorted(response.data['results'][0]),
+            ['id', 'name', 'url', 'virtual_machine']
+        )
+
+    def test_create_interface(self):
+
+        data = {
+            'virtual_machine': self.virtualmachine.pk,
+            'name': 'Test Interface 4',
+        }
+
+        url = reverse('virtualization-api:interface-list')
+        response = self.client.post(url, data, format='json', **self.header)
+
+        self.assertHttpStatus(response, status.HTTP_201_CREATED)
+        self.assertEqual(Interface.objects.count(), 4)
+        interface4 = Interface.objects.get(pk=response.data['id'])
+        self.assertEqual(interface4.virtual_machine_id, data['virtual_machine'])
+        self.assertEqual(interface4.name, data['name'])
+
+    def test_create_interface_with_802_1q(self):
+
+        data = {
+            'virtual_machine': self.virtualmachine.pk,
+            'name': 'Test Interface 4',
+            'mode': IFACE_MODE_TAGGED,
+            'untagged_vlan': self.vlan3.id,
+            'tagged_vlans': [self.vlan1.id, self.vlan2.id],
+        }
+
+        url = reverse('virtualization-api:interface-list')
+        response = self.client.post(url, data, format='json', **self.header)
+
+        self.assertHttpStatus(response, status.HTTP_201_CREATED)
+        self.assertEqual(Interface.objects.count(), 4)
+        self.assertEqual(response.data['virtual_machine']['id'], data['virtual_machine'])
+        self.assertEqual(response.data['name'], data['name'])
+        self.assertEqual(response.data['untagged_vlan']['id'], data['untagged_vlan'])
+        self.assertEqual([v['id'] for v in response.data['tagged_vlans']], data['tagged_vlans'])
+
+    def test_create_interface_bulk(self):
+
+        data = [
+            {
+                'virtual_machine': self.virtualmachine.pk,
+                'name': 'Test Interface 4',
+            },
+            {
+                'virtual_machine': self.virtualmachine.pk,
+                'name': 'Test Interface 5',
+            },
+            {
+                'virtual_machine': self.virtualmachine.pk,
+                'name': 'Test Interface 6',
+            },
+        ]
+
+        url = reverse('virtualization-api:interface-list')
+        response = self.client.post(url, data, format='json', **self.header)
+
+        self.assertHttpStatus(response, status.HTTP_201_CREATED)
+        self.assertEqual(Interface.objects.count(), 6)
+        self.assertEqual(response.data[0]['name'], data[0]['name'])
+        self.assertEqual(response.data[1]['name'], data[1]['name'])
+        self.assertEqual(response.data[2]['name'], data[2]['name'])
+
+    def test_create_interface_802_1q_bulk(self):
+
+        data = [
+            {
+                'virtual_machine': self.virtualmachine.pk,
+                'name': 'Test Interface 4',
+                'mode': IFACE_MODE_TAGGED,
+                'untagged_vlan': self.vlan2.id,
+                'tagged_vlans': [self.vlan1.id],
+            },
+            {
+                'virtual_machine': self.virtualmachine.pk,
+                'name': 'Test Interface 5',
+                'mode': IFACE_MODE_TAGGED,
+                'untagged_vlan': self.vlan2.id,
+                'tagged_vlans': [self.vlan1.id],
+            },
+            {
+                'virtual_machine': self.virtualmachine.pk,
+                'name': 'Test Interface 6',
+                'mode': IFACE_MODE_TAGGED,
+                'untagged_vlan': self.vlan2.id,
+                'tagged_vlans': [self.vlan1.id],
+            },
+        ]
+
+        url = reverse('virtualization-api:interface-list')
+        response = self.client.post(url, data, format='json', **self.header)
+
+        self.assertHttpStatus(response, status.HTTP_201_CREATED)
+        self.assertEqual(Interface.objects.count(), 6)
+        for i in range(0, 3):
+            self.assertEqual(response.data[i]['name'], data[i]['name'])
+            self.assertEqual([v['id'] for v in response.data[i]['tagged_vlans']], data[i]['tagged_vlans'])
+            self.assertEqual(response.data[i]['untagged_vlan']['id'], data[i]['untagged_vlan'])
+
+    def test_update_interface(self):
+
+        data = {
+            'virtual_machine': self.virtualmachine.pk,
+            'name': 'Test Interface X',
+        }
+
+        url = reverse('virtualization-api:interface-detail', kwargs={'pk': self.interface1.pk})
+        response = self.client.put(url, data, format='json', **self.header)
+
+        self.assertHttpStatus(response, status.HTTP_200_OK)
+        self.assertEqual(Interface.objects.count(), 3)
+        interface1 = Interface.objects.get(pk=response.data['id'])
+        self.assertEqual(interface1.name, data['name'])
+
+    def test_delete_interface(self):
+
+        url = reverse('dcim-api:interface-detail', kwargs={'pk': self.interface1.pk})
+        response = self.client.delete(url, **self.header)
+
+        self.assertHttpStatus(response, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(Interface.objects.count(), 2)

@@ -4,9 +4,11 @@ from Crypto.Cipher import PKCS1_OAEP
 from Crypto.PublicKey import RSA
 from django import forms
 from django.db.models import Count
+from taggit.forms import TagField
 
 from dcim.models import Device
-from utilities.forms import BootstrapMixin, BulkEditForm, FilterChoiceField, FlexibleModelChoiceField, SlugField
+from extras.forms import AddRemoveTagsForm, CustomFieldBulkEditForm, CustomFieldFilterForm, CustomFieldForm
+from utilities.forms import BootstrapMixin, FilterChoiceField, FlexibleModelChoiceField, SlugField
 from .models import Secret, SecretRole, UserKey
 
 
@@ -26,7 +28,7 @@ def validate_rsa_key(key, is_secret=True):
         raise forms.ValidationError("This looks like a private key. Please provide your public RSA key.")
     try:
         PKCS1_OAEP.new(key)
-    except:
+    except Exception:
         raise forms.ValidationError("Error validating RSA key. Please ensure that your key supports PKCS#1 OAEP.")
 
 
@@ -57,7 +59,7 @@ class SecretRoleCSVForm(forms.ModelForm):
 # Secrets
 #
 
-class SecretForm(BootstrapMixin, forms.ModelForm):
+class SecretForm(BootstrapMixin, CustomFieldForm):
     plaintext = forms.CharField(
         max_length=65535,
         required=False,
@@ -70,10 +72,11 @@ class SecretForm(BootstrapMixin, forms.ModelForm):
         label='Plaintext (verify)',
         widget=forms.PasswordInput()
     )
+    tags = TagField(required=False)
 
     class Meta:
         model = Secret
-        fields = ['role', 'name', 'plaintext', 'plaintext2']
+        fields = ['role', 'name', 'plaintext', 'plaintext2', 'tags']
 
     def __init__(self, *args, **kwargs):
 
@@ -126,7 +129,7 @@ class SecretCSVForm(forms.ModelForm):
         return s
 
 
-class SecretBulkEditForm(BootstrapMixin, BulkEditForm):
+class SecretBulkEditForm(BootstrapMixin, AddRemoveTagsForm, CustomFieldBulkEditForm):
     pk = forms.ModelMultipleChoiceField(queryset=Secret.objects.all(), widget=forms.MultipleHiddenInput)
     role = forms.ModelChoiceField(queryset=SecretRole.objects.all(), required=False)
     name = forms.CharField(max_length=100, required=False)
@@ -135,7 +138,8 @@ class SecretBulkEditForm(BootstrapMixin, BulkEditForm):
         nullable_fields = ['name']
 
 
-class SecretFilterForm(BootstrapMixin, forms.Form):
+class SecretFilterForm(BootstrapMixin, CustomFieldFilterForm):
+    model = Secret
     q = forms.CharField(required=False, label='Search')
     role = FilterChoiceField(
         queryset=SecretRole.objects.annotate(filter_count=Count('secrets')),
@@ -153,7 +157,8 @@ class UserKeyForm(BootstrapMixin, forms.ModelForm):
         model = UserKey
         fields = ['public_key']
         help_texts = {
-            'public_key': "Enter your public RSA key. Keep the private one with you; you'll need it for decryption.",
+            'public_key': "Enter your public RSA key. Keep the private one with you; you'll need it for decryption. "
+                          "Please note that passphrase-protected keys are not supported.",
         }
 
     def clean_public_key(self):

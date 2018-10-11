@@ -2,10 +2,12 @@ from __future__ import unicode_literals
 
 from django import forms
 from django.core.exceptions import MultipleObjectsReturned
+from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db.models import Count
+from taggit.forms import TagField
 
 from dcim.models import Site, Rack, Device, Interface
-from extras.forms import CustomFieldForm, CustomFieldBulkEditForm, CustomFieldFilterForm
+from extras.forms import AddRemoveTagsForm, CustomFieldForm, CustomFieldBulkEditForm, CustomFieldFilterForm
 from tenancy.forms import TenancyForm
 from tenancy.models import Tenant
 from utilities.forms import (
@@ -14,7 +16,9 @@ from utilities.forms import (
     SlugField, add_blank_choice,
 )
 from virtualization.models import VirtualMachine
-from .constants import IPADDRESS_ROLE_CHOICES, IPADDRESS_STATUS_CHOICES, PREFIX_STATUS_CHOICES, VLAN_STATUS_CHOICES
+from .constants import (
+    IP_PROTOCOL_CHOICES, IPADDRESS_ROLE_CHOICES, IPADDRESS_STATUS_CHOICES, PREFIX_STATUS_CHOICES, VLAN_STATUS_CHOICES,
+)
 from .models import Aggregate, IPAddress, Prefix, RIR, Role, Service, VLAN, VLANGroup, VRF
 
 IP_FAMILY_CHOICES = [
@@ -32,10 +36,11 @@ IPADDRESS_MASK_LENGTH_CHOICES = add_blank_choice([(i, i) for i in range(1, 129)]
 #
 
 class VRFForm(BootstrapMixin, TenancyForm, CustomFieldForm):
+    tags = TagField(required=False)
 
     class Meta:
         model = VRF
-        fields = ['name', 'rd', 'enforce_unique', 'description', 'tenant_group', 'tenant']
+        fields = ['name', 'rd', 'enforce_unique', 'description', 'tenant_group', 'tenant', 'tags']
         labels = {
             'rd': "RD",
         }
@@ -63,7 +68,7 @@ class VRFCSVForm(forms.ModelForm):
         }
 
 
-class VRFBulkEditForm(BootstrapMixin, CustomFieldBulkEditForm):
+class VRFBulkEditForm(BootstrapMixin, AddRemoveTagsForm, CustomFieldBulkEditForm):
     pk = forms.ModelMultipleChoiceField(queryset=VRF.objects.all(), widget=forms.MultipleHiddenInput)
     tenant = forms.ModelChoiceField(queryset=Tenant.objects.all(), required=False)
     enforce_unique = forms.NullBooleanField(
@@ -121,10 +126,11 @@ class RIRFilterForm(BootstrapMixin, forms.Form):
 #
 
 class AggregateForm(BootstrapMixin, CustomFieldForm):
+    tags = TagField(required=False)
 
     class Meta:
         model = Aggregate
-        fields = ['prefix', 'rir', 'date_added', 'description']
+        fields = ['prefix', 'rir', 'date_added', 'description', 'tags']
         help_texts = {
             'prefix': "IPv4 or IPv6 network",
             'rir': "Regional Internet Registry responsible for this prefix",
@@ -147,7 +153,7 @@ class AggregateCSVForm(forms.ModelForm):
         fields = Aggregate.csv_headers
 
 
-class AggregateBulkEditForm(BootstrapMixin, CustomFieldBulkEditForm):
+class AggregateBulkEditForm(BootstrapMixin, AddRemoveTagsForm, CustomFieldBulkEditForm):
     pk = forms.ModelMultipleChoiceField(queryset=Aggregate.objects.all(), widget=forms.MultipleHiddenInput)
     rir = forms.ModelChoiceField(queryset=RIR.objects.all(), required=False, label='RIR')
     date_added = forms.DateField(required=False)
@@ -228,10 +234,14 @@ class PrefixForm(BootstrapMixin, TenancyForm, CustomFieldForm):
             api_url='/api/ipam/vlans/?site_id={{site}}&group_id={{vlan_group}}', display_field='display_name'
         )
     )
+    tags = TagField(required=False)
 
     class Meta:
         model = Prefix
-        fields = ['prefix', 'vrf', 'site', 'vlan', 'status', 'role', 'is_pool', 'description', 'tenant_group', 'tenant']
+        fields = [
+            'prefix', 'vrf', 'site', 'vlan', 'status', 'role', 'is_pool', 'description', 'tenant_group', 'tenant',
+            'tags',
+        ]
 
     def __init__(self, *args, **kwargs):
 
@@ -336,7 +346,7 @@ class PrefixCSVForm(forms.ModelForm):
                 raise forms.ValidationError("Multiple VLANs with VID {} found".format(vlan_vid))
 
 
-class PrefixBulkEditForm(BootstrapMixin, CustomFieldBulkEditForm):
+class PrefixBulkEditForm(BootstrapMixin, AddRemoveTagsForm, CustomFieldBulkEditForm):
     pk = forms.ModelMultipleChoiceField(queryset=Prefix.objects.all(), widget=forms.MultipleHiddenInput)
     site = forms.ModelChoiceField(queryset=Site.objects.all(), required=False)
     vrf = forms.ModelChoiceField(queryset=VRF.objects.all(), required=False, label='VRF')
@@ -455,12 +465,13 @@ class IPAddressForm(BootstrapMixin, TenancyForm, ReturnURLForm, CustomFieldForm)
         )
     )
     primary_for_parent = forms.BooleanField(required=False, label='Make this the primary IP for the device/VM')
+    tags = TagField(required=False)
 
     class Meta:
         model = IPAddress
         fields = [
             'address', 'vrf', 'status', 'role', 'description', 'interface', 'primary_for_parent', 'nat_site',
-            'nat_rack', 'nat_inside', 'tenant_group', 'tenant',
+            'nat_rack', 'nat_inside', 'tenant_group', 'tenant', 'tags',
         ]
 
     def __init__(self, *args, **kwargs):
@@ -508,7 +519,7 @@ class IPAddressForm(BootstrapMixin, TenancyForm, ReturnURLForm, CustomFieldForm)
 
         ipaddress = super(IPAddressForm, self).save(*args, **kwargs)
 
-        # Assign this IPAddress as the primary for the associated Device.
+        # Assign/clear this IPAddress as the primary for the associated Device/VirtualMachine.
         if self.cleaned_data['primary_for_parent']:
             parent = self.cleaned_data['interface'].parent
             if ipaddress.address.version == 4:
@@ -516,14 +527,12 @@ class IPAddressForm(BootstrapMixin, TenancyForm, ReturnURLForm, CustomFieldForm)
             else:
                 parent.primary_ip6 = ipaddress
             parent.save()
-
-        # Clear assignment as primary for device if set.
         elif self.cleaned_data['interface']:
             parent = self.cleaned_data['interface'].parent
-            if ipaddress.address.version == 4 and parent.primary_ip4 == self:
+            if ipaddress.address.version == 4 and parent.primary_ip4 == ipaddress:
                 parent.primary_ip4 = None
                 parent.save()
-            elif ipaddress.address.version == 6 and parent.primary_ip6 == self:
+            elif ipaddress.address.version == 6 and parent.primary_ip6 == ipaddress:
                 parent.primary_ip6 = None
                 parent.save()
 
@@ -669,7 +678,7 @@ class IPAddressCSVForm(forms.ModelForm):
         return ipaddress
 
 
-class IPAddressBulkEditForm(BootstrapMixin, CustomFieldBulkEditForm):
+class IPAddressBulkEditForm(BootstrapMixin, AddRemoveTagsForm, CustomFieldBulkEditForm):
     pk = forms.ModelMultipleChoiceField(queryset=IPAddress.objects.all(), widget=forms.MultipleHiddenInput)
     vrf = forms.ModelChoiceField(queryset=VRF.objects.all(), required=False, label='VRF')
     tenant = forms.ModelChoiceField(queryset=Tenant.objects.all(), required=False)
@@ -782,10 +791,11 @@ class VLANForm(BootstrapMixin, TenancyForm, CustomFieldForm):
             api_url='/api/ipam/vlan-groups/?site_id={{site}}',
         )
     )
+    tags = TagField(required=False)
 
     class Meta:
         model = VLAN
-        fields = ['site', 'group', 'vid', 'name', 'status', 'role', 'description', 'tenant_group', 'tenant']
+        fields = ['site', 'group', 'vid', 'name', 'status', 'role', 'description', 'tenant_group', 'tenant', 'tags']
         help_texts = {
             'site': "Leave blank if this VLAN spans multiple sites",
             'group': "VLAN group (optional)",
@@ -859,7 +869,7 @@ class VLANCSVForm(forms.ModelForm):
                     raise forms.ValidationError("Global VLAN group {} not found".format(group_name))
 
 
-class VLANBulkEditForm(BootstrapMixin, CustomFieldBulkEditForm):
+class VLANBulkEditForm(BootstrapMixin, AddRemoveTagsForm, CustomFieldBulkEditForm):
     pk = forms.ModelMultipleChoiceField(queryset=VLAN.objects.all(), widget=forms.MultipleHiddenInput)
     site = forms.ModelChoiceField(queryset=Site.objects.all(), required=False)
     group = forms.ModelChoiceField(queryset=VLANGroup.objects.all(), required=False)
@@ -907,11 +917,12 @@ class VLANFilterForm(BootstrapMixin, CustomFieldFilterForm):
 # Services
 #
 
-class ServiceForm(BootstrapMixin, forms.ModelForm):
+class ServiceForm(BootstrapMixin, CustomFieldForm):
+    tags = TagField(required=False)
 
     class Meta:
         model = Service
-        fields = ['name', 'protocol', 'port', 'ipaddresses', 'description']
+        fields = ['name', 'protocol', 'port', 'ipaddresses', 'description', 'tags']
         help_texts = {
             'ipaddresses': "IP address assignment is optional. If no IPs are selected, the service is assumed to be "
                            "reachable via all IPs assigned to the device.",
@@ -933,3 +944,28 @@ class ServiceForm(BootstrapMixin, forms.ModelForm):
             )
         else:
             self.fields['ipaddresses'].choices = []
+
+
+class ServiceFilterForm(BootstrapMixin, CustomFieldFilterForm):
+    model = Service
+    q = forms.CharField(
+        required=False,
+        label='Search'
+    )
+    protocol = forms.ChoiceField(
+        choices=add_blank_choice(IP_PROTOCOL_CHOICES),
+        required=False
+    )
+    port = forms.IntegerField(
+        required=False
+    )
+
+
+class ServiceBulkEditForm(BootstrapMixin, CustomFieldBulkEditForm):
+    pk = forms.ModelMultipleChoiceField(queryset=Service.objects.all(), widget=forms.MultipleHiddenInput)
+    protocol = forms.ChoiceField(choices=add_blank_choice(IP_PROTOCOL_CHOICES), required=False)
+    port = forms.IntegerField(validators=[MinValueValidator(1), MaxValueValidator(65535)], required=False)
+    description = forms.CharField(max_length=100, required=False)
+
+    class Meta:
+        nullable_fields = ['site', 'group', 'tenant', 'role', 'description']

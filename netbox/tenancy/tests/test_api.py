@@ -1,22 +1,17 @@
 from __future__ import unicode_literals
 
-from django.contrib.auth.models import User
 from django.urls import reverse
 from rest_framework import status
-from rest_framework.test import APITestCase
 
 from tenancy.models import Tenant, TenantGroup
-from users.models import Token
-from utilities.tests import HttpStatusMixin
+from utilities.testing import APITestCase
 
 
-class TenantGroupTest(HttpStatusMixin, APITestCase):
+class TenantGroupTest(APITestCase):
 
     def setUp(self):
 
-        user = User.objects.create(username='testuser', is_superuser=True)
-        token = Token.objects.create(user=user)
-        self.header = {'HTTP_AUTHORIZATION': 'Token {}'.format(token.key)}
+        super(TenantGroupTest, self).setUp()
 
         self.tenantgroup1 = TenantGroup.objects.create(name='Test Tenant Group 1', slug='test-tenant-group-1')
         self.tenantgroup2 = TenantGroup.objects.create(name='Test Tenant Group 2', slug='test-tenant-group-2')
@@ -35,6 +30,16 @@ class TenantGroupTest(HttpStatusMixin, APITestCase):
         response = self.client.get(url, **self.header)
 
         self.assertEqual(response.data['count'], 3)
+
+    def test_list_tenantgroups_brief(self):
+
+        url = reverse('tenancy-api:tenantgroup-list')
+        response = self.client.get('{}?brief=1'.format(url), **self.header)
+
+        self.assertEqual(
+            sorted(response.data['results'][0]),
+            ['id', 'name', 'slug', 'url']
+        )
 
     def test_create_tenantgroup(self):
 
@@ -103,13 +108,11 @@ class TenantGroupTest(HttpStatusMixin, APITestCase):
         self.assertEqual(TenantGroup.objects.count(), 2)
 
 
-class TenantTest(HttpStatusMixin, APITestCase):
+class TenantTest(APITestCase):
 
     def setUp(self):
 
-        user = User.objects.create(username='testuser', is_superuser=True)
-        token = Token.objects.create(user=user)
-        self.header = {'HTTP_AUTHORIZATION': 'Token {}'.format(token.key)}
+        super(TenantTest, self).setUp()
 
         self.tenantgroup1 = TenantGroup.objects.create(name='Test Tenant Group 1', slug='test-tenant-group-1')
         self.tenantgroup2 = TenantGroup.objects.create(name='Test Tenant Group 2', slug='test-tenant-group-2')
@@ -130,6 +133,16 @@ class TenantTest(HttpStatusMixin, APITestCase):
         response = self.client.get(url, **self.header)
 
         self.assertEqual(response.data['count'], 3)
+
+    def test_list_tenants_brief(self):
+
+        url = reverse('tenancy-api:tenant-list')
+        response = self.client.get('{}?brief=1'.format(url), **self.header)
+
+        self.assertEqual(
+            sorted(response.data['results'][0]),
+            ['id', 'name', 'slug', 'url']
+        )
 
     def test_create_tenant(self):
 

@@ -3,12 +3,29 @@ from __future__ import unicode_literals
 from collections import OrderedDict
 
 from django import forms
+from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
+from django.core.exceptions import ObjectDoesNotExist
+from mptt.forms import TreeNodeMultipleChoiceField
+from taggit.forms import TagField
+from taggit.models import Tag
 
-from utilities.forms import BootstrapMixin, BulkEditForm, LaxURLField
-from .constants import CF_FILTER_DISABLED, CF_TYPE_BOOLEAN, CF_TYPE_DATE, CF_TYPE_INTEGER, CF_TYPE_SELECT, CF_TYPE_URL
-from .models import CustomField, CustomFieldValue, ImageAttachment
+from dcim.models import DeviceRole, Platform, Region, Site
+from tenancy.models import Tenant, TenantGroup
+from utilities.forms import (
+    add_blank_choice, BootstrapMixin, BulkEditForm, FilterChoiceField, FilterTreeNodeMultipleChoiceField, LaxURLField,
+    JSONField, SlugField,
+)
+from .constants import (
+    CF_FILTER_DISABLED, CF_TYPE_BOOLEAN, CF_TYPE_DATE, CF_TYPE_INTEGER, CF_TYPE_SELECT, CF_TYPE_URL,
+    OBJECTCHANGE_ACTION_CHOICES,
+)
+from .models import ConfigContext, CustomField, CustomFieldValue, ImageAttachment, ObjectChange
 
+
+#
+# Custom fields
+#
 
 def get_custom_fields_for_model(content_type, filterable_only=False, bulk_edit=False):
     """
@@ -53,7 +70,14 @@ def get_custom_fields_for_model(content_type, filterable_only=False, bulk_edit=F
             choices = [(cfc.pk, cfc) for cfc in cf.choices.all()]
             if not cf.required or bulk_edit or filterable_only:
                 choices = [(None, '---------')] + choices
-            field = forms.TypedChoiceField(choices=choices, coerce=int, required=cf.required)
+            # Check for a default choice
+            default_choice = None
+            if initial:
+                try:
+                    default_choice = cf.choices.get(value=initial).pk
+                except ObjectDoesNotExist:
+                    pass
+            field = forms.TypedChoiceField(choices=choices, coerce=int, required=cf.required, initial=default_choice)
 
         # URL
         elif cf.type == CF_TYPE_URL:
@@ -162,8 +186,119 @@ class CustomFieldFilterForm(forms.Form):
             self.fields[name] = field
 
 
+#
+# Tags
+#
+
+class TagForm(BootstrapMixin, forms.ModelForm):
+    slug = SlugField()
+
+    class Meta:
+        model = Tag
+        fields = ['name', 'slug']
+
+
+class AddRemoveTagsForm(forms.Form):
+
+    def __init__(self, *args, **kwargs):
+        super(AddRemoveTagsForm, self).__init__(*args, **kwargs)
+
+        # Add add/remove tags fields
+        self.fields['add_tags'] = TagField(required=False)
+        self.fields['remove_tags'] = TagField(required=False)
+
+
+#
+# Config contexts
+#
+
+class ConfigContextForm(BootstrapMixin, forms.ModelForm):
+    regions = TreeNodeMultipleChoiceField(
+        queryset=Region.objects.all(),
+        required=False
+    )
+    data = JSONField()
+
+    class Meta:
+        model = ConfigContext
+        fields = [
+            'name', 'weight', 'description', 'is_active', 'regions', 'sites', 'roles', 'platforms', 'tenant_groups',
+            'tenants', 'data',
+        ]
+
+
+class ConfigContextFilterForm(BootstrapMixin, forms.Form):
+    q = forms.CharField(
+        required=False,
+        label='Search'
+    )
+    region = FilterTreeNodeMultipleChoiceField(
+        queryset=Region.objects.all(),
+        to_field_name='slug'
+    )
+    site = FilterChoiceField(
+        queryset=Site.objects.all(),
+        to_field_name='slug'
+    )
+    role = FilterChoiceField(
+        queryset=DeviceRole.objects.all(),
+        to_field_name='slug'
+    )
+    platform = FilterChoiceField(
+        queryset=Platform.objects.all(),
+        to_field_name='slug'
+    )
+    tenant_group = FilterChoiceField(
+        queryset=TenantGroup.objects.all(),
+        to_field_name='slug'
+    )
+    tenant = FilterChoiceField(
+        queryset=Tenant.objects.all(),
+        to_field_name='slug'
+    )
+
+
+#
+# Image attachments
+#
+
 class ImageAttachmentForm(BootstrapMixin, forms.ModelForm):
 
     class Meta:
         model = ImageAttachment
         fields = ['name', 'image']
+
+
+#
+# Change logging
+#
+
+class ObjectChangeFilterForm(BootstrapMixin, CustomFieldFilterForm):
+    model = ObjectChange
+    q = forms.CharField(
+        required=False,
+        label='Search'
+    )
+    # TODO: Change time_0 and time_1 to time_after and time_before for django-filter==2.0
+    time_0 = forms.DateTimeField(
+        label='After',
+        required=False,
+        widget=forms.TextInput(
+            attrs={'placeholder': 'YYYY-MM-DD hh:mm:ss'}
+        )
+    )
+    time_1 = forms.DateTimeField(
+        label='Before',
+        required=False,
+        widget=forms.TextInput(
+            attrs={'placeholder': 'YYYY-MM-DD hh:mm:ss'}
+        )
+    )
+    action = forms.ChoiceField(
+        choices=add_blank_choice(OBJECTCHANGE_ACTION_CHOICES),
+        required=False
+    )
+    user = forms.ModelChoiceField(
+        queryset=User.objects.order_by('username'),
+        required=False
+    )

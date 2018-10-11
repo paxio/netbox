@@ -12,10 +12,17 @@ from rest_framework.views import APIView
 from circuits.filters import CircuitFilter, ProviderFilter
 from circuits.models import Circuit, Provider
 from circuits.tables import CircuitTable, ProviderTable
-from dcim.filters import DeviceFilter, DeviceTypeFilter, RackFilter, SiteFilter
-from dcim.models import ConsolePort, Device, DeviceType, InterfaceConnection, PowerPort, Rack, Site
-from dcim.tables import DeviceDetailTable, DeviceTypeTable, RackTable, SiteTable
-from extras.models import ReportResult, TopologyMap, UserAction
+from dcim.filters import (
+    DeviceFilter, DeviceTypeFilter, RackFilter, RackGroupFilter, SiteFilter, VirtualChassisFilter
+)
+from dcim.models import (
+    ConsolePort, Device, DeviceType, InterfaceConnection, PowerPort, Rack, RackGroup, Site,
+    VirtualChassis
+)
+from dcim.tables import (
+    DeviceDetailTable, DeviceTypeTable, RackTable, RackGroupTable, SiteTable, VirtualChassisTable
+)
+from extras.models import ObjectChange, ReportResult, TopologyMap
 from ipam.filters import AggregateFilter, IPAddressFilter, PrefixFilter, VLANFilter, VRFFilter
 from ipam.models import Aggregate, IPAddress, Prefix, VLAN, VRF
 from ipam.tables import AggregateTable, IPAddressTable, PrefixTable, VLANTable, VRFTable
@@ -58,6 +65,12 @@ SEARCH_TYPES = OrderedDict((
         'table': RackTable,
         'url': 'dcim:rack_list',
     }),
+    ('rackgroup', {
+        'queryset': RackGroup.objects.select_related('site').annotate(rack_count=Count('racks')),
+        'filter': RackGroupFilter,
+        'table': RackGroupTable,
+        'url': 'dcim:rackgroup_list',
+    }),
     ('devicetype', {
         'queryset': DeviceType.objects.select_related('manufacturer').annotate(instance_count=Count('instances')),
         'filter': DeviceTypeFilter,
@@ -71,6 +84,12 @@ SEARCH_TYPES = OrderedDict((
         'filter': DeviceFilter,
         'table': DeviceDetailTable,
         'url': 'dcim:device_list',
+    }),
+    ('virtualchassis', {
+        'queryset': VirtualChassis.objects.select_related('master').annotate(member_count=Count('members')),
+        'filter': VirtualChassisFilter,
+        'table': VirtualChassisTable,
+        'url': 'dcim:virtualchassis_list',
     }),
     # IPAM
     ('vrf', {
@@ -179,7 +198,7 @@ class HomeView(View):
             'stats': stats,
             'topology_maps': TopologyMap.objects.filter(site__isnull=True),
             'report_results': ReportResult.objects.order_by('-created')[:10],
-            'recent_activity': UserAction.objects.select_related('user')[:50]
+            'changelog': ObjectChange.objects.select_related('user')[:50]
         })
 
 

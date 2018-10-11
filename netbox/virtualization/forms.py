@@ -4,19 +4,20 @@ from django import forms
 from django.core.exceptions import ValidationError
 from django.db.models import Count
 from mptt.forms import TreeNodeChoiceField
+from taggit.forms import TagField
 
 from dcim.constants import IFACE_FF_VIRTUAL, IFACE_MODE_ACCESS, IFACE_MODE_TAGGED_ALL
 from dcim.forms import INTERFACE_MODE_HELP_TEXT
-from dcim.formfields import MACAddressFormField
 from dcim.models import Device, DeviceRole, Interface, Platform, Rack, Region, Site
-from extras.forms import CustomFieldBulkEditForm, CustomFieldForm, CustomFieldFilterForm
+from extras.forms import AddRemoveTagsForm, CustomFieldBulkEditForm, CustomFieldForm, CustomFieldFilterForm
 from ipam.models import IPAddress
 from tenancy.forms import TenancyForm
 from tenancy.models import Tenant
 from utilities.forms import (
     AnnotatedMultipleChoiceField, APISelect, APISelectMultiple, BootstrapMixin, BulkEditForm, BulkEditNullBooleanSelect,
     ChainedFieldsMixin, ChainedModelChoiceField, ChainedModelMultipleChoiceField, CommentField, ComponentForm,
-    ConfirmationForm, CSVChoiceField, ExpandableNameField, FilterChoiceField, SlugField, SmallTextarea, add_blank_choice
+    ConfirmationForm, CSVChoiceField, ExpandableNameField, FilterChoiceField, JSONField, SlugField, SmallTextarea,
+    add_blank_choice
 )
 from .constants import VM_STATUS_CHOICES
 from .models import Cluster, ClusterGroup, ClusterType, VirtualMachine
@@ -78,10 +79,11 @@ class ClusterGroupCSVForm(forms.ModelForm):
 
 class ClusterForm(BootstrapMixin, CustomFieldForm):
     comments = CommentField(widget=SmallTextarea)
+    tags = TagField(required=False)
 
     class Meta:
         model = Cluster
-        fields = ['name', 'type', 'group', 'site', 'comments']
+        fields = ['name', 'type', 'group', 'site', 'comments', 'tags']
 
 
 class ClusterCSVForm(forms.ModelForm):
@@ -117,7 +119,7 @@ class ClusterCSVForm(forms.ModelForm):
         fields = Cluster.csv_headers
 
 
-class ClusterBulkEditForm(BootstrapMixin, CustomFieldBulkEditForm):
+class ClusterBulkEditForm(BootstrapMixin, AddRemoveTagsForm, CustomFieldBulkEditForm):
     pk = forms.ModelMultipleChoiceField(queryset=Cluster.objects.all(), widget=forms.MultipleHiddenInput)
     type = forms.ModelChoiceField(queryset=ClusterType.objects.all(), required=False)
     group = forms.ModelChoiceField(queryset=ClusterGroup.objects.all(), required=False)
@@ -244,13 +246,18 @@ class VirtualMachineForm(BootstrapMixin, TenancyForm, CustomFieldForm):
             api_url='/api/virtualization/clusters/?group_id={{cluster_group}}'
         )
     )
+    tags = TagField(required=False)
+    local_context_data = JSONField(required=False)
 
     class Meta:
         model = VirtualMachine
         fields = [
             'name', 'status', 'cluster_group', 'cluster', 'role', 'tenant', 'platform', 'primary_ip4', 'primary_ip6',
-            'vcpus', 'memory', 'disk', 'comments',
+            'vcpus', 'memory', 'disk', 'comments', 'tags', 'local_context_data',
         ]
+        help_texts = {
+            'local_context_data': "Local config context data overwrites all sources contexts in the final rendered config context",
+        }
 
     def __init__(self, *args, **kwargs):
 
@@ -346,7 +353,7 @@ class VirtualMachineCSVForm(forms.ModelForm):
         fields = VirtualMachine.csv_headers
 
 
-class VirtualMachineBulkEditForm(BootstrapMixin, CustomFieldBulkEditForm):
+class VirtualMachineBulkEditForm(BootstrapMixin, AddRemoveTagsForm, CustomFieldBulkEditForm):
     pk = forms.ModelMultipleChoiceField(queryset=VirtualMachine.objects.all(), widget=forms.MultipleHiddenInput)
     status = forms.ChoiceField(choices=add_blank_choice(VM_STATUS_CHOICES), required=False, initial='')
     cluster = forms.ModelChoiceField(queryset=Cluster.objects.all(), required=False)
@@ -412,11 +419,12 @@ class VirtualMachineFilterForm(BootstrapMixin, CustomFieldFilterForm):
 #
 
 class InterfaceForm(BootstrapMixin, forms.ModelForm):
+    tags = TagField(required=False)
 
     class Meta:
         model = Interface
         fields = [
-            'virtual_machine', 'name', 'form_factor', 'enabled', 'mac_address', 'mtu', 'description', 'mode',
+            'virtual_machine', 'name', 'form_factor', 'enabled', 'mac_address', 'mtu', 'description', 'mode', 'tags',
             'untagged_vlan', 'tagged_vlans',
         ]
         widgets = {
@@ -453,8 +461,9 @@ class InterfaceCreateForm(ComponentForm):
     form_factor = forms.ChoiceField(choices=VIFACE_FF_CHOICES, initial=IFACE_FF_VIRTUAL, widget=forms.HiddenInput())
     enabled = forms.BooleanField(required=False)
     mtu = forms.IntegerField(required=False, min_value=1, max_value=32767, label='MTU')
-    mac_address = MACAddressFormField(required=False, label='MAC Address')
+    mac_address = forms.CharField(required=False, label='MAC Address')
     description = forms.CharField(max_length=100, required=False)
+    tags = TagField(required=False)
 
     def __init__(self, *args, **kwargs):
 
