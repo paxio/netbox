@@ -104,7 +104,7 @@ class Tenant(ChangeLoggedModel, CustomFieldModel):
         )
 
 @python_2_unicode_compatible
-class Package(CreatedUpdatedModel, CustomFieldModel):
+class Package(ChangeLoggedModel, CustomFieldModel):
     """
     A Package represents a service delivered to our customers.
     """

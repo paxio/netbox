@@ -8,9 +8,9 @@ from taggit.managers import TaggableManager
 
 from dcim.constants import STATUS_CLASSES
 from dcim.fields import ASNField
-from extras.models import CustomFieldModel, ObjectChange, CustomFieldValue
+from extras.models import CustomFieldModel, ObjectChange
+from utilities.models import ChangeLoggedModel
 from tenancy.models import Tenant, Package
-from utilities.models import CreatedUpdatedModel
 from utilities.utils import serialize_object
 from .constants import CIRCUIT_STATUS_ACTIVE, CIRCUIT_STATUS_CHOICES, TERM_SIDE_CHOICES
 
