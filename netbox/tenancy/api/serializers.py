@@ -66,19 +66,19 @@ class NestedPackageSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Package
-        fields = ['id', 'url', 'name', 'slug', 'tag_type']
+        fields = ['id', 'url', 'name', 'slug']
 
 class PackageSerializer(CustomFieldModelSerializer):
     group = NestedPackageSerializer()
 
     class Meta:
         model = Package
-        fields = ['id', 'name', 'slug', 'group', 'ipv4_enabled', 'ipv6_enabled', 'multicast_enabled', 'service_type', 'speed_upload', 'speed_download', 'qos_profile', 'dhcp_pool', 'tag_type']
+        fields = ['id', 'name', 'slug', 'group', 'ipv4_enabled', 'ipv6_enabled', 'multicast_enabled', 'service_type', 'speed_upload', 'speed_download', 'qos_profile', 'dhcp_pool']
 
 
 class WritablePackageSerializer(CustomFieldModelSerializer):
 
     class Meta:
         model = Package
-        fields = ['id', 'name', 'slug', 'group', 'ipv4_enabled', 'ipv6_enabled', 'multicast_enabled', 'service_type', 'speed_upload', 'speed_download', 'qos_profile', 'dhcp_pool', 'tag_type']
+        fields = ['id', 'name', 'slug', 'group', 'ipv4_enabled', 'ipv6_enabled', 'multicast_enabled', 'service_type', 'speed_upload', 'speed_download', 'qos_profile', 'dhcp_pool']
 

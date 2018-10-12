@@ -10,7 +10,7 @@ from utilities.forms import (
 )
 from ipam.models import Prefix
 from .models import Tenant, TenantGroup, Package
-from .constants import SERVICE_TYPE_CHOICES, TAG_TYPE_CHOICES
+from .constants import SERVICE_TYPE_CHOICES
 
 #
 # Tenant groups
@@ -152,7 +152,7 @@ class PackageForm(BootstrapMixin, ChainedFieldsMixin, forms.ModelForm):
 
     class Meta:
         model = Package
-        fields = ['name', 'slug', 'group', 'ipv4_enabled', 'ipv6_enabled', 'multicast_enabled', 'service_type', 'speed_upload', 'speed_download', 'qos_profile', 'dhcp_pool', 'tag_type']
+        fields = ['name', 'slug', 'group', 'ipv4_enabled', 'ipv6_enabled', 'multicast_enabled', 'service_type', 'speed_upload', 'speed_download', 'qos_profile', 'dhcp_pool']
 
 
 class PackageFilterForm(BootstrapMixin, CustomFieldFilterForm):
@@ -180,10 +180,6 @@ class PackageCSVForm(forms.ModelForm):
         choices=SERVICE_TYPE_CHOICES,
         help_text='Service type'
     )
-    tag_type = CSVChoiceField(
-        choices=TAG_TYPE_CHOICES,
-        help_text='Service type'
-    )
     dhcp_pool = forms.ModelChoiceField(
         queryset=Prefix.objects.all(),
         required=False,
@@ -205,7 +201,6 @@ class PackageBulkEditForm(BootstrapMixin, CustomFieldBulkEditForm):
     pk = forms.ModelMultipleChoiceField(queryset=Tenant.objects.all(), widget=forms.MultipleHiddenInput)
     group = forms.ModelChoiceField(queryset=TenantGroup.objects.all(), required=False)
     qos_profile = forms.CharField(max_length=100, required=False)
-    tag_type = forms.ChoiceField(choices=add_blank_choice(TAG_TYPE_CHOICES), required=False)
     service_type = forms.ChoiceField(choices=add_blank_choice(SERVICE_TYPE_CHOICES), required=False)
 
     class Meta:

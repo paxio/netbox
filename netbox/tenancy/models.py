@@ -6,7 +6,7 @@ from django.urls import reverse
 from django.utils.encoding import python_2_unicode_compatible
 from taggit.managers import TaggableManager
 
-from extras.models import CustomFieldModel, CustomFieldValue
+from extras.models import CustomFieldModel
 from utilities.models import ChangeLoggedModel
 from .constants import *
 
@@ -104,13 +104,21 @@ class Tenant(ChangeLoggedModel, CustomFieldModel):
         )
 
 @python_2_unicode_compatible
-class Package(ChangeLoggedModel, CustomFieldModel):
+class Package(ChangeLoggedModel):
     """
     A Package represents a service delivered to our customers.
     """
     name = models.CharField(max_length=30, unique=True)
     slug = models.SlugField(unique=True)
-    group = models.ForeignKey('TenantGroup', related_name='packages', blank=False, null=False, on_delete=models.CASCADE)
+
+    group = models.ForeignKey(
+        to='tenancy.TenantGroup',
+        on_delete=models.CASCADE,
+        related_name='packages',
+        blank=False,
+        null=True
+    )
+
     ipv4_enabled = models.BooleanField(blank=False, default=True, verbose_name='IPv4 is enabled', help_text='Customers recieve an IPv4 address')
     ipv6_enabled = models.BooleanField(blank=False, default=True, verbose_name='IPv6 is enabled', help_text='Customers recieve an IPv6 address')
     multicast_enabled = models.BooleanField(blank=False, default=True, verbose_name='Multicast is enabled', help_text='Customers can use multicast')
@@ -118,11 +126,16 @@ class Package(ChangeLoggedModel, CustomFieldModel):
     speed_upload = models.PositiveIntegerField(blank=False, null=False, verbose_name='Upload speed rate (Kbps)')
     speed_download = models.PositiveIntegerField(blank=False, null=False, verbose_name='Download speed rate (Kbps)')
     qos_profile = models.CharField(max_length=30, unique=False)
-    dhcp_pool = models.ForeignKey('ipam.Prefix', related_name='prefixes', blank=True, null=True, on_delete=models.SET_NULL)
-    tag_type = models.PositiveSmallIntegerField('Tag type', choices=TAG_TYPE_CHOICES, default=TAG_TYPE_DOUBLETAGGED, help_text="Customers provide any VLAN tags")
-    custom_field_values = GenericRelation(CustomFieldValue, content_type_field='obj_type', object_id_field='obj_id')
 
-    csv_headers = ['name', 'slug', 'group', 'ipv4_enabled', 'ipv6_enabled', 'multicast_enabled', 'service_type', 'speed_upload', 'speed_download', 'qos_profile', 'dhcp_pool', 'tag_type']
+    dhcp_pool = models.ForeignKey(
+        to='ipam.Prefix',
+        related_name='prefixes',
+        blank=True,
+        null=True,
+        on_delete=models.SET_NULL
+    )
+
+    csv_headers = ['name', 'slug', 'group', 'ipv4_enabled', 'ipv6_enabled', 'multicast_enabled', 'service_type', 'speed_upload', 'speed_download', 'qos_profile', 'dhcp_pool']
 
     class Meta:
         ordering = ['group', 'name']
@@ -148,5 +161,4 @@ class Package(ChangeLoggedModel, CustomFieldModel):
             self.speed_download,
             self.qos_profile,
             self.dhcp_pool.prefix if self.dhcp_pool else None,
-            self.tag_type,
         )

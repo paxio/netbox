@@ -37,6 +37,5 @@ class Migration(migrations.Migration):
             options={
                 'ordering': ['group', 'name'],
             },
-            bases=(models.Model, extras.models.CustomFieldModel),
         ),
     ]
