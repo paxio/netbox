@@ -131,7 +131,7 @@ class SiteForm(BootstrapMixin, TenancyForm, CustomFieldForm):
             'physical_address': "Physical location of the building (e.g. for GPS)",
             'shipping_address': "If different from the physical address",
             'latitude': "Latitude in decimal format (xx.yyyyyy)",
-            'longitude': "Longitude in decimal format (xx.yyyyyy)"
+            'longitude': "Longitude in decimal format (xxx.yyyyyy)"
         }
 
 
