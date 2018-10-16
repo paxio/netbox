@@ -163,13 +163,13 @@ class Site(ChangeLoggedModel, CustomFieldModel):
     )
     latitude = models.DecimalField(
         max_digits=8,
-        decimal_places=6,
+        decimal_places=7,
         blank=True,
         null=True
     )
     longitude = models.DecimalField(
         max_digits=9,
-        decimal_places=6,
+        decimal_places=7,
         blank=True,
         null=True
     )
