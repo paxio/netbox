@@ -152,7 +152,7 @@ class PackageForm(BootstrapMixin, ChainedFieldsMixin, forms.ModelForm):
 
     class Meta:
         model = Package
-        fields = ['name', 'slug', 'group', 'ipv4_enabled', 'ipv6_enabled', 'multicast_enabled', 'service_type', 'speed_upload', 'speed_download', 'qos_profile', 'dhcp_pool']
+        fields = ['name', 'slug', 'group', 'ipv4_enabled', 'ipv6_enabled', 'multicast_enabled', 'service_type', 'speed_upload', 'speed_download', 'qos_profile', 'dhcp_pool', 'comments', 'tags']
 
 
 class PackageFilterForm(BootstrapMixin, CustomFieldFilterForm):

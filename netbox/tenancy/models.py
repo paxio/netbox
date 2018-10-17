@@ -104,7 +104,7 @@ class Tenant(ChangeLoggedModel, CustomFieldModel):
         )
 
 @python_2_unicode_compatible
-class Package(ChangeLoggedModel):
+class Package(ChangeLoggedModel, CustomFieldModel):
     """
     A Package represents a service delivered to our customers.
     """
@@ -126,7 +126,6 @@ class Package(ChangeLoggedModel):
     speed_upload = models.PositiveIntegerField(blank=False, null=False, verbose_name='Upload speed rate (Kbps)')
     speed_download = models.PositiveIntegerField(blank=False, null=False, verbose_name='Download speed rate (Kbps)')
     qos_profile = models.CharField(max_length=30, unique=False)
-
     dhcp_pool = models.ForeignKey(
         to='ipam.Prefix',
         related_name='prefixes',
@@ -134,6 +133,16 @@ class Package(ChangeLoggedModel):
         null=True,
         on_delete=models.SET_NULL
     )
+    comments = models.TextField(
+        blank=True
+    )
+    custom_field_values = GenericRelation(
+        to='extras.CustomFieldValue',
+        content_type_field='obj_type',
+        object_id_field='obj_id'
+    )
+
+    tags = TaggableManager()
 
     csv_headers = ['name', 'slug', 'group', 'ipv4_enabled', 'ipv6_enabled', 'multicast_enabled', 'service_type', 'speed_upload', 'speed_download', 'qos_profile', 'dhcp_pool']
 

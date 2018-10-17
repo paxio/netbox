@@ -64,6 +64,9 @@ class PackageFilter(CustomFieldFilterSet, django_filters.FilterSet):
         to_field_name='slug',
         label='Group (slug)',
     )
+    tag = django_filters.CharFilter(
+        name='tags__slug',
+    )
 
     class Meta:
         model = Package
