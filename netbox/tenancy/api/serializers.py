@@ -74,7 +74,7 @@ class PackageSerializer(CustomFieldModelSerializer):
     class Meta:
         model = Package
         fields = [
-            'id', 'name', 'slug', 'group', 'ipv4_enabled', 'ipv6_enabled', 'multicast_enabled', 'service_type', 'speed_upload', 'speed_download', 'qos_profile', 'dhcp_pool'
+            'id', 'name', 'slug', 'group', 'ipv4_enabled', 'ipv6_enabled', 'multicast_enabled', 'service_type', 'speed_upload', 'speed_download', 'qos_profile', 'dhcp_pool',
             'comments', 'tags', 'custom_fields', 'created', 'last_updated',
         ]
 
