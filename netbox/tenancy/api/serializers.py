@@ -68,7 +68,7 @@ class NestedPackageSerializer(serializers.ModelSerializer):
         model = Package
         fields = ['id', 'url', 'name', 'slug']
 
-class PackageSerializer(CustomFieldModelSerializer):
+class PackageSerializer(TaggitSerializer, CustomFieldModelSerializer):
     group = NestedPackageSerializer()
 
     class Meta:
