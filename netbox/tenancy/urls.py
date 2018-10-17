@@ -4,7 +4,7 @@ from django.conf.urls import url
 
 from extras.views import ObjectChangeLogView
 from . import views
-from .models import Tenant, TenantGroup
+from .models import Tenant, TenantGroup, Package
 
 app_name = 'tenancy'
 urlpatterns = [
