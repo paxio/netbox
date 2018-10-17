@@ -60,8 +60,7 @@ class WritableTenantSerializer(CustomFieldModelSerializer):
 #
 #  Packages
 #
-
-class NestedPackageSerializer(serializers.ModelSerializer):
+class NestedPackageSerializer(WritableNestedSerializer):
     url = serializers.HyperlinkedIdentityField(view_name='tenancy-api:package-detail')
 
     class Meta:
@@ -70,6 +69,7 @@ class NestedPackageSerializer(serializers.ModelSerializer):
 
 class PackageSerializer(TaggitSerializer, CustomFieldModelSerializer):
     group = NestedPackageSerializer()
+    tags = TagListSerializerField(required=False)
 
     class Meta:
         model = Package
