@@ -5,11 +5,10 @@ from rest_framework import status
 
 from circuits.constants import CIRCUIT_STATUS_ACTIVE, TERM_SIDE_A, TERM_SIDE_Z
 from circuits.models import Circuit, CircuitTermination, CircuitType, Provider
-from dcim.models import Site
+from dcim.models import Site, Manufacturer, DeviceRole, DeviceType, Interface, Device
 from extras.constants import GRAPH_TYPE_PROVIDER
 from extras.models import Graph
 from utilities.testing import APITestCase
-
 
 class ProviderTest(APITestCase):
 
@@ -337,14 +336,43 @@ class CircuitTerminationTest(APITestCase):
         self.circuit3 = Circuit.objects.create(cid='TEST0003', provider=provider, type=circuittype)
         self.site1 = Site.objects.create(name='Test Site 1', slug='test-site-1')
         self.site2 = Site.objects.create(name='Test Site 2', slug='test-site-2')
+        manufacturer = Manufacturer.objects.create(name='Test Manufacturer 1', slug='test-manufacturer-1')
+        self.devicetype1 = DeviceType.objects.create(
+            manufacturer=manufacturer, model='Test Device Type 1', slug='test-device-type-1'
+        )
+        self.devicetype2 = DeviceType.objects.create(
+            manufacturer=manufacturer, model='Test Device Type 2', slug='test-device-type-2'
+        )
+        self.devicerole1 = DeviceRole.objects.create(
+            name='Test Device Role 1', slug='test-device-role-1', color='ff0000'
+        )
+        self.devicerole2 = DeviceRole.objects.create(
+            name='Test Device Role 2', slug='test-device-role-2', color='00ff00'
+        )
+        self.device1 = Device.objects.create(
+            device_type=self.devicetype1,
+            device_role=self.devicerole1,
+            name='Test Device 1',
+            site=self.site1
+        )
+        self.device2 = Device.objects.create(
+            device_type=self.devicetype1,
+            device_role=self.devicerole1,
+            name='Test Device 2',
+            site=self.site1,
+        )
+        self.interface1 = Interface.objects.create(device=self.device1, name='Test Interface 1')
+        self.interface2 = Interface.objects.create(device=self.device2, name='Test Interface 2')
+        self.interface3 = Interface.objects.create(device=self.device2, name='Test Interface 3')
+        self.interface4 = Interface.objects.create(device=self.device2, name='Test Interface 4')
         self.circuittermination1 = CircuitTermination.objects.create(
-            circuit=self.circuit1, term_side=TERM_SIDE_A, site=self.site1, port_speed=1000000
+            circuit=self.circuit1, term_side=TERM_SIDE_A, site=self.site1, port_speed=1000000, interface=self.interface1
         )
         self.circuittermination2 = CircuitTermination.objects.create(
-            circuit=self.circuit2, term_side=TERM_SIDE_A, site=self.site1, port_speed=1000000
+            circuit=self.circuit2, term_side=TERM_SIDE_A, site=self.site1, port_speed=1000000, interface=self.interface2
         )
         self.circuittermination3 = CircuitTermination.objects.create(
-            circuit=self.circuit3, term_side=TERM_SIDE_A, site=self.site1, port_speed=1000000
+            circuit=self.circuit3, term_side=TERM_SIDE_A, site=self.site1, port_speed=1000000, interface=self.interface3
         )
 
     def test_get_circuittermination(self):
@@ -368,6 +396,7 @@ class CircuitTerminationTest(APITestCase):
             'term_side': TERM_SIDE_Z,
             'site': self.site2.pk,
             'port_speed': 1000000,
+            'interface': self.interface4.pk,
         }
 
         url = reverse('circuits-api:circuittermination-list')
@@ -380,6 +409,7 @@ class CircuitTerminationTest(APITestCase):
         self.assertEqual(circuittermination4.term_side, data['term_side'])
         self.assertEqual(circuittermination4.site_id, data['site'])
         self.assertEqual(circuittermination4.port_speed, data['port_speed'])
+        self.assertEqual(circuittermination4.interface, self.interface4)
 
     def test_update_circuittermination(self):
 
@@ -388,6 +418,7 @@ class CircuitTerminationTest(APITestCase):
             'term_side': TERM_SIDE_Z,
             'site': self.site2.pk,
             'port_speed': 1000000,
+            'interface': self.interface4.pk,
         }
 
         url = reverse('circuits-api:circuittermination-detail', kwargs={'pk': self.circuittermination1.pk})
@@ -400,6 +431,7 @@ class CircuitTerminationTest(APITestCase):
         self.assertEqual(circuittermination1.term_side, data['term_side'])
         self.assertEqual(circuittermination1.site_id, data['site'])
         self.assertEqual(circuittermination1.port_speed, data['port_speed'])
+        self.assertEqual(circuittermination1.interface, self.interface4)
 
     def test_delete_circuittermination(self):
 
