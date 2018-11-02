@@ -128,6 +128,7 @@ class TenantBulkDeleteView(PermissionRequiredMixin, BulkDeleteView):
     table = tables.TenantTable
     default_return_url = 'tenancy:tenant_list'
 
+
 #
 #  Packages
 #
@@ -139,6 +140,7 @@ class PackageListView(ObjectListView):
     table = tables.PackageTable
     template_name = 'tenancy/package_list.html'
 
+
 class PackageCreateView(PermissionRequiredMixin, ObjectEditView):
     permission_required = 'tenancy.add_package'
     model = Package
@@ -146,14 +148,17 @@ class PackageCreateView(PermissionRequiredMixin, ObjectEditView):
     template_name = 'tenancy/package_edit.html'
     default_return_url = 'tenancy:package_list'
 
+
 class PackageEditView(PackageCreateView):
     permission_required = 'tenancy.change_package'
+
 
 class PackageBulkImportView(PermissionRequiredMixin, BulkImportView):
     permission_required = 'tenancy.add_package'
     model_form = forms.PackageCSVForm
     table = tables.PackageTable
     default_return_url = 'tenancy:package_list'
+
 
 class PackageBulkEditView(PermissionRequiredMixin, BulkEditView):
     permission_required = 'tenancy.change_package'
@@ -164,6 +169,7 @@ class PackageBulkEditView(PermissionRequiredMixin, BulkEditView):
     form = forms.PackageBulkEditForm
     default_return_url = 'tenancy:package_list'
 
+
 class PackageBulkDeleteView(PermissionRequiredMixin, BulkDeleteView):
     permission_required = 'tenancy.delete_package'
     cls = Package
@@ -171,6 +177,7 @@ class PackageBulkDeleteView(PermissionRequiredMixin, BulkDeleteView):
     filter = filters.PackageFilter
     table = tables.PackageTable
     default_return_url = 'tenancy:package_list'
+
 
 class PackageView(View):
 
@@ -180,6 +187,7 @@ class PackageView(View):
         return render(request, 'tenancy/package.html', {
             'package': package
         })
+
 
 class PackageDeleteView(PermissionRequiredMixin, ObjectDeleteView):
     permission_required = 'tenancy.delete_package'

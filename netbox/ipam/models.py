@@ -674,10 +674,11 @@ class VLANGroup(ChangeLoggedModel):
         blank=True,
         null=True
     )
-    outervid = models.PositiveSmallIntegerField(verbose_name='Outer ID', default='1', validators=[
-         MinValueValidator(1),
-         MaxValueValidator(4094)
-     ])
+    outervid = models.PositiveSmallIntegerField(
+        verbose_name='Outer ID',
+        default='1',
+        validators=[MinValueValidator(1), MaxValueValidator(4094)]
+    )
 
     csv_headers = ['name', 'slug', 'site', 'outervid']
 

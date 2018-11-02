@@ -12,6 +12,7 @@ from ipam.models import Prefix
 from .models import Tenant, TenantGroup, Package
 from .constants import SERVICE_TYPE_CHOICES
 
+
 #
 # Tenant groups
 #
@@ -22,7 +23,6 @@ class TenantGroupForm(BootstrapMixin, forms.ModelForm):
     class Meta:
         model = TenantGroup
         fields = ['name', 'slug']
-
 
 
 class TenantGroupCSVForm(forms.ModelForm):
@@ -57,8 +57,7 @@ class TenantCSVForm(forms.ModelForm):
         required=False,
         to_field_name='name',
         help_text='Name of parent group',
-
-    error_messages={
+        error_messages={
             'invalid_choice': 'Group not found.'
         }
     )
@@ -125,6 +124,7 @@ class TenancyForm(ChainedFieldsMixin, forms.Form):
             kwargs['initial'] = initial
 
         super(TenancyForm, self).__init__(*args, **kwargs)
+
 
 #
 #  Packages
@@ -197,6 +197,7 @@ class PackageCSVForm(forms.ModelForm):
             'name': 'Package name'
         }
 
+
 class PackageBulkEditForm(BootstrapMixin, CustomFieldBulkEditForm):
     pk = forms.ModelMultipleChoiceField(queryset=Tenant.objects.all(), widget=forms.MultipleHiddenInput)
     group = forms.ModelChoiceField(queryset=TenantGroup.objects.all(), required=False)
@@ -205,4 +206,3 @@ class PackageBulkEditForm(BootstrapMixin, CustomFieldBulkEditForm):
 
     class Meta:
         nullable_fields = []
-

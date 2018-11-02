@@ -48,6 +48,7 @@ class TenantFilter(CustomFieldFilterSet, django_filters.FilterSet):
             Q(comments__icontains=value)
         )
 
+
 class PackageFilter(CustomFieldFilterSet, django_filters.FilterSet):
     id__in = NumericInFilter(name='id', lookup_expr='in')
     q = django_filters.CharFilter(

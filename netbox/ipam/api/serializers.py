@@ -142,6 +142,7 @@ class NestedVLANGroupSerializer(WritableNestedSerializer):
         model = VLANGroup
         fields = ['id', 'url', 'name', 'slug', 'outervid']
 
+
 #
 # VLANs
 #

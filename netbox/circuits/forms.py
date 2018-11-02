@@ -15,6 +15,7 @@ from utilities.forms import (
 from .constants import CIRCUIT_STATUS_CHOICES
 from .models import Circuit, CircuitTermination, CircuitType, Provider
 
+
 #
 # Providers
 #
@@ -125,7 +126,7 @@ class CircuitForm(BootstrapMixin, TenancyForm, CustomFieldForm):
         package = self.cleaned_data.get('package')
 
         # Validate interface
-        if ctype.slug == 'customer' and package == None:
+        if ctype.slug == 'customer' and package is None:
             raise forms.ValidationError("A package is required for a customer circuit")
 
 

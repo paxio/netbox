@@ -1730,7 +1730,6 @@ class DeviceBayDeleteView(PermissionRequiredMixin, ObjectDeleteView):
 class DeviceBayPopulateView(PermissionRequiredMixin, View):
     permission_required = 'dcim.change_devicebay'
 
-
     def get(self, request, pk):
 
         device_bay = get_object_or_404(DeviceBay, pk=pk)
@@ -1760,7 +1759,6 @@ class DeviceBayPopulateView(PermissionRequiredMixin, View):
             'form': form,
             'return_url': reverse('dcim:device', kwargs={'pk': device_bay.device.pk}),
         })
-
 
 
 class DeviceBayDepopulateView(PermissionRequiredMixin, View):

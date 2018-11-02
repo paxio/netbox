@@ -109,6 +109,7 @@ def humanize_speed(speed):
     else:
         return '{} Kbps'.format(speed)
 
+
 @register.filter()
 def humanize_vlans(vlans):
     def print_sequence(lowest, end):
@@ -117,15 +118,16 @@ def humanize_vlans(vlans):
     v = sorted([int(d.vid) for d in vlans])
     ranges = []
 
-    for key, g in groupby(enumerate(v), lambda x:x[0]-x[1]):
-        group = (map(itemgetter(1),g))
-        group = list(map(int,group))
+    for key, g in groupby(enumerate(v), lambda x: x[0] - x[1]):
+        group = (map(itemgetter(1), g))
+        group = list(map(int, group))
         if len(group) > 1:
             ranges.append(print_sequence(group[0], group[-1]))
         else:
             ranges.append(str(group[0]))
 
     return ', '.join(ranges)
+
 
 @register.filter()
 def example_choices(field, arg=3):

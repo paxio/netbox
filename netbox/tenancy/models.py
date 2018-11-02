@@ -103,6 +103,7 @@ class Tenant(ChangeLoggedModel, CustomFieldModel):
             self.comments,
         )
 
+
 @python_2_unicode_compatible
 class Package(ChangeLoggedModel, CustomFieldModel):
     """

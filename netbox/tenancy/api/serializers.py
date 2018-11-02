@@ -57,15 +57,18 @@ class WritableTenantSerializer(CustomFieldModelSerializer):
         model = Tenant
         fields = ['id', 'name', 'slug', 'group', 'description', 'comments', 'custom_fields', 'created', 'last_updated']
 
+
 #
 #  Packages
 #
+
 class NestedPackageSerializer(WritableNestedSerializer):
     url = serializers.HyperlinkedIdentityField(view_name='tenancy-api:package-detail')
 
     class Meta:
         model = Package
         fields = ['id', 'url', 'name', 'slug']
+
 
 class PackageSerializer(TaggitSerializer, CustomFieldModelSerializer):
     group = NestedPackageSerializer()
@@ -84,4 +87,3 @@ class WritablePackageSerializer(CustomFieldModelSerializer):
     class Meta:
         model = Package
         fields = ['id', 'name', 'slug', 'group', 'ipv4_enabled', 'ipv6_enabled', 'multicast_enabled', 'service_type', 'speed_upload', 'speed_download', 'qos_profile', 'dhcp_pool', 'comments', 'custom_fields', 'created', 'last_updated']
-
