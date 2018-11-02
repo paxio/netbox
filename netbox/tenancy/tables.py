@@ -59,6 +59,7 @@ class TenantTable(BaseTable):
         model = Tenant
         fields = ('pk', 'name', 'group', 'description')
 
+
 #
 #  Packages
 #
