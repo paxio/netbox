@@ -5,7 +5,7 @@ from netaddr import IPNetwork
 from rest_framework import status
 
 from dcim.constants import (
-    IFACE_FF_1GE_FIXED, IFACE_FF_LAG, IFACE_MODE_TAGGED, SITE_STATUS_ACTIVE, SUBDEVICE_ROLE_CHILD,
+    IFACE_FF_1GE_FIXED, IFACE_FF_LAG, IFACE_MODE_TAGGED, IFACE_MODE_ACCESS, SITE_STATUS_ACTIVE, SUBDEVICE_ROLE_CHILD,
     SUBDEVICE_ROLE_PARENT,
 )
 from dcim.models import (
@@ -2471,6 +2471,25 @@ class InterfaceTest(APITestCase):
         self.assertEqual(response.data['untagged_vlan']['id'], data['untagged_vlan'])
         self.assertEqual([v['id'] for v in response.data['tagged_vlans']], data['tagged_vlans'])
 
+    def test_create_interface_with_access_vlan(self):
+
+        data = {
+            'device': self.device.pk,
+            'name': 'Test Interface 4',
+            'mode': IFACE_MODE_ACCESS,
+            'untagged_vlan': self.vlan3.id,
+            'tagged_vlans': [],
+        }
+
+        url = reverse('dcim-api:interface-list')
+        response = self.client.post(url, data, format='json', **self.header)
+
+        self.assertHttpStatus(response, status.HTTP_201_CREATED)
+        self.assertEqual(Interface.objects.count(), 4)
+        self.assertEqual(response.data['device']['id'], data['device'])
+        self.assertEqual(response.data['name'], data['name'])
+        self.assertEqual(response.data['untagged_vlan']['id'], data['untagged_vlan'])
+
     def test_create_interface_bulk(self):
 
         data = [
@@ -2553,6 +2572,26 @@ class InterfaceTest(APITestCase):
         interface1 = Interface.objects.get(pk=response.data['id'])
         self.assertEqual(interface1.name, data['name'])
         self.assertEqual(interface1.lag_id, data['lag'])
+
+    def test_update_interface_mode_access(self):
+
+        data = {
+            'device': self.device.pk,
+            'name': 'Test Interface Y',
+            'mode': IFACE_MODE_ACCESS,
+            'untagged_vlan': self.vlan3.id,
+            'tagged_vlans': [],
+        }
+
+        url = reverse('dcim-api:interface-detail', kwargs={'pk': self.interface2.pk})
+        response = self.client.put(url, data, format='json', **self.header)
+
+        self.assertHttpStatus(response, status.HTTP_200_OK)
+        self.assertEqual(Interface.objects.count(), 3)
+        interface1 = Interface.objects.get(pk=response.data['id'])
+        self.assertEqual(interface1.name, data['name'])
+        self.assertEqual(interface1.mode, data['mode'])
+        self.assertEqual(interface1.untagged_vlan, self.vlan3)
 
     def test_delete_interface(self):
 
