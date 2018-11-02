@@ -16,7 +16,7 @@ from dcim.models import (
     RackReservation, RackRole, Region, Site, VirtualChassis,
 )
 from extras.api.customfields import CustomFieldModelSerializer
-from ipam.models import IPAddress, VLAN, VLANGroup
+from ipam.models import IPAddress, VLAN
 from tenancy.api.serializers import NestedTenantSerializer
 from users.api.serializers import NestedUserSerializer
 from utilities.api import (
@@ -609,23 +609,13 @@ class InterfaceCircuitTerminationSerializer(WritableNestedSerializer):
             'id', 'circuit', 'term_side', 'port_speed', 'upstream_speed', 'xconnect_id', 'pp_info',
         ]
 
-
-class InterfaceVLANGroupSerializer(serializers.ModelSerializer):
-    url = serializers.HyperlinkedIdentityField(view_name='ipam-api:vlangroup-detail')
-
-    class Meta:
-        model = VLANGroup
-        fields = ['id', 'url', 'name', 'slug', 'outervid']
-
-
 # Cannot import ipam.api.NestedVLANSerializer due to circular dependency
 class InterfaceVLANSerializer(WritableNestedSerializer):
     url = serializers.HyperlinkedIdentityField(view_name='ipam-api:vlan-detail')
-    group = InterfaceVLANGroupSerializer()
 
     class Meta:
         model = VLAN
-        fields = ['id', 'url', 'vid', 'name', 'display_name', 'group']
+        fields = ['id', 'url', 'vid', 'name', 'display_name']
 
 
 class InterfaceSerializer(TaggitSerializer, IsConnectedMixin, ValidatedModelSerializer):
