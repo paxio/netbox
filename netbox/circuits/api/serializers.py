@@ -63,7 +63,7 @@ class CircuitSerializer(TaggitSerializer, CustomFieldModelSerializer):
     type = NestedCircuitTypeSerializer()
     tenant = NestedTenantSerializer(required=False, allow_null=True)
     tags = TagListSerializerField(required=False)
-    package = NestedPackageSerializer()
+    package = NestedPackageSerializer(required=False, allow_null=True)
 
     class Meta:
         model = Circuit
