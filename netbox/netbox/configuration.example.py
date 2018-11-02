@@ -12,10 +12,10 @@ ALLOWED_HOSTS = []
 
 # PostgreSQL database configuration.
 DATABASE = {
-    'NAME': 'netbox',         # Database name
-    'USER': '',               # PostgreSQL username
+    'NAME': 'circle_test',    # Database name
+    'USER': 'circleci',       # PostgreSQL username
     'PASSWORD': '',           # PostgreSQL password
-    'HOST': 'localhost',      # Database server
+    'HOST': '127.0.0.1',      # Database server
     'PORT': '',               # Database port (leave blank for default)
 }
 
