@@ -702,6 +702,7 @@ class VLANGroup(ChangeLoggedModel):
             self.name,
             self.slug,
             self.site.name if self.site else None,
+            self.outervid,
         )
 
     def get_next_available_vid(self):
