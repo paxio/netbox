@@ -141,7 +141,7 @@ class TenantTest(APITestCase):
 
         self.assertEqual(
             sorted(response.data['results'][0]),
-            ['id', 'name', 'slug', 'url']
+            ['description', 'id', 'name', 'slug', 'url']
         )
 
     def test_create_tenant(self):

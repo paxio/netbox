@@ -760,9 +760,9 @@ class VLANGroupTest(APITestCase):
 
         super(VLANGroupTest, self).setUp()
 
-        self.vlangroup1 = VLANGroup.objects.create(name='Test VLAN Group 1', slug='test-vlan-group-1')
-        self.vlangroup2 = VLANGroup.objects.create(name='Test VLAN Group 2', slug='test-vlan-group-2')
-        self.vlangroup3 = VLANGroup.objects.create(name='Test VLAN Group 3', slug='test-vlan-group-3')
+        self.vlangroup1 = VLANGroup.objects.create(name='Test VLAN Group 1', slug='test-vlan-group-1', outervid=1)
+        self.vlangroup2 = VLANGroup.objects.create(name='Test VLAN Group 2', slug='test-vlan-group-2', outervid=2)
+        self.vlangroup3 = VLANGroup.objects.create(name='Test VLAN Group 3', slug='test-vlan-group-3', outervid=3)
 
     def test_get_vlangroup(self):
 
@@ -785,7 +785,7 @@ class VLANGroupTest(APITestCase):
 
         self.assertEqual(
             sorted(response.data['results'][0]),
-            ['id', 'name', 'slug', 'url']
+            ['id', 'name', 'outervid', 'slug', 'url']
         )
 
     def test_create_vlangroup(self):
@@ -793,6 +793,7 @@ class VLANGroupTest(APITestCase):
         data = {
             'name': 'Test VLAN Group 4',
             'slug': 'test-vlan-group-4',
+            'outervid': 4,
         }
 
         url = reverse('ipam-api:vlangroup-list')
@@ -803,6 +804,7 @@ class VLANGroupTest(APITestCase):
         vlangroup4 = VLANGroup.objects.get(pk=response.data['id'])
         self.assertEqual(vlangroup4.name, data['name'])
         self.assertEqual(vlangroup4.slug, data['slug'])
+        self.assertEqual(vlangroup4.outervid, data['outervid'])
 
     def test_create_vlangroup_bulk(self):
 
@@ -810,14 +812,17 @@ class VLANGroupTest(APITestCase):
             {
                 'name': 'Test VLAN Group 4',
                 'slug': 'test-vlan-group-4',
+                'outervid': 4,
             },
             {
                 'name': 'Test VLAN Group 5',
                 'slug': 'test-vlan-group-5',
+                'outervid': 5,
             },
             {
                 'name': 'Test VLAN Group 6',
                 'slug': 'test-vlan-group-6',
+                'outervid': 6,
             },
         ]
 
@@ -827,6 +832,7 @@ class VLANGroupTest(APITestCase):
         self.assertHttpStatus(response, status.HTTP_201_CREATED)
         self.assertEqual(VLANGroup.objects.count(), 6)
         self.assertEqual(response.data[0]['name'], data[0]['name'])
+        self.assertEqual(response.data[0]['outervid'], data[0]['outervid'])
         self.assertEqual(response.data[1]['name'], data[1]['name'])
         self.assertEqual(response.data[2]['name'], data[2]['name'])
 

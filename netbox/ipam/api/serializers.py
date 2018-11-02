@@ -118,21 +118,6 @@ class VLANGroupSerializer(ValidatedModelSerializer):
     class Meta:
         model = VLANGroup
         fields = ['id', 'name', 'slug', 'site', 'outervid']
-
-
-class NestedVLANGroupSerializer(serializers.ModelSerializer):
-    url = serializers.HyperlinkedIdentityField(view_name='ipam-api:vlangroup-detail')
-
-    class Meta:
-        model = VLANGroup
-        fields = ['id', 'url', 'name', 'slug', 'outervid']
-
-
-class WritableVLANGroupSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = VLANGroup
-        fields = ['id', 'name', 'slug', 'site', 'outervid']
         validators = []
 
     def validate(self, data):
@@ -155,8 +140,7 @@ class NestedVLANGroupSerializer(WritableNestedSerializer):
 
     class Meta:
         model = VLANGroup
-        fields = ['id', 'url', 'name', 'slug']
-
+        fields = ['id', 'url', 'name', 'slug', 'outervid']
 
 #
 # VLANs
