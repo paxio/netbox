@@ -1925,7 +1925,7 @@ class Interface(ComponentModel):
             self.untagged_vlan = None
 
         # Only "tagged" interfaces may have tagged VLANs assigned. ("tagged all" implies all VLANs are assigned.)
-        if self.pk and (self.mode is not IFACE_MODE_TAGGED and self.mode is not IFACE_MODE_DOUBLE_TAGGED):
+        if self.pk and self.mode is IFACE_MODE_TAGGED_ALL:
             self.tagged_vlans.clear()
 
         return super(Interface, self).save(*args, **kwargs)
