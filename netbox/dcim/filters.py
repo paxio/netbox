@@ -635,6 +635,14 @@ class InterfaceFilter(django_filters.FilterSet):
     tag = django_filters.CharFilter(
         name='tags__slug',
     )
+    vlan_id = django_filters.CharFilter(
+        method='filter_vlan_id',
+        label='Assigned VLAN'
+    )
+    vlan = django_filters.CharFilter(
+        method='filter_vlan',
+        label='Assigned VID'
+    )
 
     class Meta:
         model = Interface
@@ -648,6 +656,24 @@ class InterfaceFilter(django_filters.FilterSet):
             return queryset.filter(pk__in=vc_interface_ids).order_naturally(ordering)
         except Device.DoesNotExist:
             return queryset.none()
+
+    def filter_vlan_id(self, queryset, name, value):
+        value = value.strip()
+        if not value:
+            return queryset
+        return queryset.filter(
+            Q(untagged_vlan_id=value) |
+            Q(tagged_vlans=value)
+        )
+
+    def filter_vlan(self, queryset, name, value):
+        value = value.strip()
+        if not value:
+            return queryset
+        return queryset.filter(
+            Q(untagged_vlan_id__vid=value) |
+            Q(tagged_vlans__vid=value)
+        )
 
     def filter_type(self, queryset, name, value):
         value = value.strip().lower()
