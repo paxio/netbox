@@ -71,14 +71,13 @@ class NestedPackageSerializer(WritableNestedSerializer):
 
 
 class PackageSerializer(TaggitSerializer, CustomFieldModelSerializer):
-    group = NestedPackageSerializer()
     tags = TagListSerializerField(required=False)
 
     class Meta:
         model = Package
         fields = [
-            'id', 'name', 'slug', 'group', 'ipv4_enabled', 'ipv6_enabled', 'multicast_enabled', 'service_type', 'speed_upload', 'speed_download', 'qos_profile', 'dhcp_pool',
-            'comments', 'tags', 'custom_fields', 'created', 'last_updated',
+            'id', 'name', 'slug', 'ipv4_enabled', 'ipv6_enabled', 'multicast_enabled', 'speed_upload', 'speed_download',
+            'qos_profile', 'comments', 'tags', 'custom_fields', 'created', 'last_updated',
         ]
 
 
@@ -86,4 +85,7 @@ class WritablePackageSerializer(CustomFieldModelSerializer):
 
     class Meta:
         model = Package
-        fields = ['id', 'name', 'slug', 'group', 'ipv4_enabled', 'ipv6_enabled', 'multicast_enabled', 'service_type', 'speed_upload', 'speed_download', 'qos_profile', 'dhcp_pool', 'comments', 'custom_fields', 'created', 'last_updated']
+        fields = [
+            'id', 'name', 'slug', 'ipv4_enabled', 'ipv6_enabled', 'multicast_enabled', 'speed_upload', 'speed_download',
+            'qos_profile', 'comments', 'custom_fields', 'created', 'last_updated'
+        ]

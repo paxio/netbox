@@ -111,28 +111,13 @@ class Package(ChangeLoggedModel, CustomFieldModel):
     name = models.CharField(max_length=30, unique=True)
     slug = models.SlugField(unique=True)
 
-    group = models.ForeignKey(
-        to='tenancy.TenantGroup',
-        on_delete=models.CASCADE,
-        related_name='packages',
-        blank=False,
-        null=True
-    )
-
     ipv4_enabled = models.BooleanField(blank=False, default=True, verbose_name='IPv4 is enabled', help_text='Customers recieve an IPv4 address')
     ipv6_enabled = models.BooleanField(blank=False, default=True, verbose_name='IPv6 is enabled', help_text='Customers recieve an IPv6 address')
     multicast_enabled = models.BooleanField(blank=False, default=True, verbose_name='Multicast is enabled', help_text='Customers can use multicast')
-    service_type = models.PositiveSmallIntegerField('Service type', choices=SERVICE_TYPE_CHOICES, default=SERVICE_TYPE_DYNAMIC, help_text="Static or dynamic configuration")
     speed_upload = models.PositiveIntegerField(blank=False, null=False, verbose_name='Upload speed rate (Kbps)')
     speed_download = models.PositiveIntegerField(blank=False, null=False, verbose_name='Download speed rate (Kbps)')
     qos_profile = models.CharField(max_length=30, unique=False)
-    dhcp_pool = models.ForeignKey(
-        to='ipam.Prefix',
-        related_name='prefixes',
-        blank=True,
-        null=True,
-        on_delete=models.SET_NULL
-    )
+
     comments = models.TextField(
         blank=True
     )
@@ -144,10 +129,10 @@ class Package(ChangeLoggedModel, CustomFieldModel):
 
     tags = TaggableManager()
 
-    csv_headers = ['name', 'slug', 'group', 'ipv4_enabled', 'ipv6_enabled', 'multicast_enabled', 'service_type', 'speed_upload', 'speed_download', 'qos_profile', 'dhcp_pool']
+    csv_headers = ['name', 'slug', 'ipv4_enabled', 'ipv6_enabled', 'multicast_enabled', 'speed_upload', 'speed_download', 'qos_profile']
 
     class Meta:
-        ordering = ['group', 'name']
+        ordering = ['name']
         verbose_name = 'Package'
         verbose_name_plural = 'Packages'
 
@@ -161,13 +146,10 @@ class Package(ChangeLoggedModel, CustomFieldModel):
         return (
             self.name,
             self.slug,
-            self.group.name if self.group else None,
             self.ipv4_enabled,
             self.ipv6_enabled,
             self.multicast_enabled,
-            self.service_type,
             self.speed_upload,
             self.speed_download,
             self.qos_profile,
-            self.dhcp_pool.prefix if self.dhcp_pool else None,
         )

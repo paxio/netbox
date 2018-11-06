@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 from django.urls import reverse
 from rest_framework import status
 
-from tenancy.models import Tenant, TenantGroup
+from tenancy.models import Tenant, TenantGroup, Package
 from utilities.testing import APITestCase
 
 
@@ -213,3 +213,122 @@ class TenantTest(APITestCase):
 
         self.assertHttpStatus(response, status.HTTP_204_NO_CONTENT)
         self.assertEqual(Tenant.objects.count(), 2)
+
+
+class PackageTest(APITestCase):
+
+    def setUp(self):
+
+        super(PackageTest, self).setUp()
+
+        self.package1 = Package.objects.create(name='Test Package 1', slug='test-package-1', ipv4_enabled=True, ipv6_enabled=True, multicast_enabled=True, speed_upload=100000, speed_download=100000, qos_profile='normal_qos')
+        self.package2 = Package.objects.create(name='Test Package 2', slug='test-package-2', ipv4_enabled=False, ipv6_enabled=True, multicast_enabled=False, speed_upload=10000, speed_download=10000, qos_profile='special_qos')
+        self.package3 = Package.objects.create(name='Test Package 3', slug='test-package-3', ipv4_enabled=True, ipv6_enabled=False, multicast_enabled=False, speed_upload=1000, speed_download=1000, qos_profile='normal_qos')
+
+    def test_create_package(self):
+
+        data = {
+            'name': 'Test Package 4',
+            'slug': 'test-package-4',
+            'ipv4_enabled': True,
+            'ipv6_enabled': True,
+            'multicast_enabled': True,
+            'speed_upload': 1000000,
+            'speed_download': 1000000,
+            'qos_profile': 'normal_qos',
+        }
+
+        url = reverse('tenancy-api:package-list')
+        response = self.client.post(url, data, format='json', **self.header)
+
+        self.assertHttpStatus(response, status.HTTP_201_CREATED)
+        self.assertEqual(Package.objects.count(), 4)
+        package4 = Package.objects.get(pk=response.data['id'])
+        self.assertEqual(package4.name, data['name'])
+        self.assertEqual(package4.slug, data['slug'])
+        self.assertEqual(package4.ipv4_enabled, data['ipv4_enabled'])
+        self.assertEqual(package4.ipv6_enabled, data['ipv6_enabled'])
+        self.assertEqual(package4.multicast_enabled, data['multicast_enabled'])
+        self.assertEqual(package4.speed_upload, data['speed_upload'])
+        self.assertEqual(package4.speed_download, data['speed_download'])
+        self.assertEqual(package4.qos_profile, data['qos_profile'])
+
+    def test_create_package_bulk(self):
+
+        data = [
+            {
+                'name': 'Test Package 4',
+                'slug': 'test-package-4',
+                'ipv4_enabled': True,
+                'ipv6_enabled': True,
+                'multicast_enabled': True,
+                'speed_upload': 1000000,
+                'speed_download': 1000000,
+                'qos_profile': 'normal_qos',
+            },
+            {
+                'name': 'Test Package 5',
+                'slug': 'test-package-5',
+                'ipv4_enabled': False,
+                'ipv6_enabled': False,
+                'multicast_enabled': False,
+                'speed_upload': 1000000,
+                'speed_download': 1000000,
+                'qos_profile': 'normal_qos',
+            },
+            {
+                'name': 'Test Package 6',
+                'slug': 'test-package-6',
+                'ipv4_enabled': True,
+                'ipv6_enabled': True,
+                'multicast_enabled': True,
+                'speed_upload': 100,
+                'speed_download': 100,
+                'qos_profile': 'special_qos',
+            },
+        ]
+
+        url = reverse('tenancy-api:package-list')
+        response = self.client.post(url, data, format='json', **self.header)
+
+        self.assertHttpStatus(response, status.HTTP_201_CREATED)
+        self.assertEqual(Package.objects.count(), 6)
+        self.assertEqual(response.data[0]['name'], data[0]['name'])
+        self.assertEqual(response.data[1]['name'], data[1]['name'])
+        self.assertEqual(response.data[2]['name'], data[2]['name'])
+
+    def test_update_package(self):
+
+        data = {
+                'name': 'Test Package X',
+                'slug': 'test-package-x',
+                'ipv4_enabled': False,
+                'ipv6_enabled': False,
+                'multicast_enabled': False,
+                'speed_upload': 10,
+                'speed_download': 10,
+                'qos_profile': 'special_qos',
+            }
+
+        url = reverse('tenancy-api:package-detail', kwargs={'pk': self.package1.pk})
+        response = self.client.put(url, data, format='json', **self.header)
+
+        self.assertHttpStatus(response, status.HTTP_200_OK)
+        self.assertEqual(Package.objects.count(), 3)
+        package1 = Package.objects.get(pk=response.data['id'])
+        self.assertEqual(package1.name, data['name'])
+        self.assertEqual(package1.slug, data['slug'])
+        self.assertEqual(package1.ipv4_enabled, data['ipv4_enabled'])
+        self.assertEqual(package1.ipv6_enabled, data['ipv6_enabled'])
+        self.assertEqual(package1.multicast_enabled, data['multicast_enabled'])
+        self.assertEqual(package1.speed_upload, data['speed_upload'])
+        self.assertEqual(package1.speed_download, data['speed_download'])
+        self.assertEqual(package1.qos_profile, data['qos_profile'])
+
+    def test_delete_package(self):
+
+        url = reverse('tenancy-api:package-detail', kwargs={'pk': self.package1.pk})
+        response = self.client.delete(url, **self.header)
+
+        self.assertHttpStatus(response, status.HTTP_204_NO_CONTENT)
+        self.assertEqual(Package.objects.count(), 2)
