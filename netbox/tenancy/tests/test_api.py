@@ -300,15 +300,15 @@ class PackageTest(APITestCase):
     def test_update_package(self):
 
         data = {
-                'name': 'Test Package X',
-                'slug': 'test-package-x',
-                'ipv4_enabled': False,
-                'ipv6_enabled': False,
-                'multicast_enabled': False,
-                'speed_upload': 10,
-                'speed_download': 10,
-                'qos_profile': 'special_qos',
-            }
+            'name': 'Test Package X',
+            'slug': 'test-package-x',
+            'ipv4_enabled': False,
+            'ipv6_enabled': False,
+            'multicast_enabled': False,
+            'speed_upload': 10,
+            'speed_download': 10,
+            'qos_profile': 'special_qos',
+        }
 
         url = reverse('tenancy-api:package-detail', kwargs={'pk': self.package1.pk})
         response = self.client.put(url, data, format='json', **self.header)
