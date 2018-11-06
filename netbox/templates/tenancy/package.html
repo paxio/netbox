@@ -6,9 +6,6 @@
         <div class="col-sm-8 col-md-9">
             <ol class="breadcrumb">
                 <li><a href="{% url 'tenancy:package_list' %}">Packages</a></li>
-                {% if tenant.group %}
-                    <li><a href="{% url 'tenancy:package_list' %}?group={{ package.group.slug }}">{{ package.group }}</a></li>
-                {% endif %}
                 <li>{{ package }}</li>
             </ol>
         </div>
@@ -43,7 +40,7 @@
     {% include 'inc/created_updated.html' with obj=package %}
     <ul class="nav nav-tabs">
         <li role="presentation"{% if not active_tab %} class="active"{% endif %}>
-            <a href="{{ package.get_absolute_url }}">Tenant</a>
+            <a href="{{ package.get_absolute_url }}">Package</a>
         </li>
         <li role="presentation"{% if active_tab == 'changelog' %} class="active"{% endif %}>
             <a href="{% url 'tenancy:package_changelog' slug=package.slug %}">Changelog</a>
@@ -60,46 +57,46 @@
             </div>
             <table class="table table-hover panel-body attr-table">
                 <tr>
-                    <td>Group</td>
+                    <td>IPv4</td>
                     <td>
-                        {% if package.group %}
-                            <a href="{{ package.group.get_absolute_url }}">{{ package.group }}</a>
+                        {% if package.ipv4_enabled %}
+                            <i class="glyphicon glyphicon-ok text-success" title="Yes"></i>
                         {% else %}
-                            <span class="text-muted">None</span>
+                            <i class="glyphicon glyphicon-remove text-danger" title="No"></i>
                         {% endif %}
                     </td>
                 </tr>
                 <tr>
-                    <td>IPv4</td>
-                    <td>{{ package.ipv4_enabled }}</td>
-                </tr>
-                <tr>
                     <td>IPv6</td>
-                    <td>{{ package.ipv6_enabled }}</td>
+                    <td>
+                        {% if package.ipv6_enabled %}
+                            <i class="glyphicon glyphicon-ok text-success" title="Yes"></i>
+                        {% else %}
+                            <i class="glyphicon glyphicon-remove text-danger" title="No"></i>
+                        {% endif %}
+                    </td>
                 </tr>
                 <tr>
                     <td>Multicast</td>
-                    <td>{{ package.multicast_enabled }}</td>
-                </tr>
-                <tr>
-                    <td>Service type</td>
-                    <td>{{ package.service_type }}</td>
+                    <td>
+                        {% if package.multicast_enabled %}
+                            <i class="glyphicon glyphicon-ok text-success" title="Yes"></i>
+                        {% else %}
+                            <i class="glyphicon glyphicon-remove text-danger" title="No"></i>
+                        {% endif %}
+                    </td>
                 </tr>
                 <tr>
                     <td>Upload speed</td>
-                    <td>{{ package.speed_upload }}</td>
+                    <td>{{ package.speed_upload|humanize_speed }}</td>
                 </tr>
                 <tr>
                     <td>Download speed</td>
-                    <td>{{ package.speed_download }}</td>
+                    <td>{{ package.speed_download|humanize_speed }}</td>
                 </tr>
                 <tr>
                     <td>QoS Profile</td>
                     <td>{{ package.qos_profile }}</td>
-                </tr>
-                <tr>
-                    <td>DHCP Pool</td>
-                    <td>{{ package.dhcp_pool }}</td>
                 </tr>
             </table>
         </div>

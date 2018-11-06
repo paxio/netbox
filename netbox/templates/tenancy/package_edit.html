@@ -8,11 +8,9 @@
         <div class="panel-body">
             {% render_field form.name %}
             {% render_field form.slug %}
-            {% render_field form.group %}
             {% render_field form.ipv4_enabled %}
             {% render_field form.ipv6_enabled %}
             {% render_field form.multicast_enabled %}
-            {% render_field form.service_type %}
             <div class="form-group">
                 <label class="col-md-3 control-label" for="id_speed_upload">{{ form.speed_upload.label }}</label>
                 <div class="col-md-9">
@@ -34,7 +32,6 @@
                 </div>
             </div>
             {% render_field form.qos_profile %}
-            {% render_field form.dhcp_pool %}
         </div>
     </div>
     {% if form.custom_fields %}

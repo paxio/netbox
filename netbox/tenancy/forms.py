@@ -132,63 +132,19 @@ class TenancyForm(ChainedFieldsMixin, forms.Form):
 
 class PackageForm(BootstrapMixin, ChainedFieldsMixin, forms.ModelForm):
     slug = SlugField()
-    tenant_group = forms.ModelChoiceField(
-        queryset=TenantGroup.objects.all(),
-        required=False,
-        widget=forms.Select(
-            attrs={'filter-for': 'dhcp_pool', 'nullable': 'false'}
-        )
-    )
-    dhcp_pool = ChainedModelChoiceField(
-        queryset=Prefix.objects.all(),
-        chains=(
-            ('tenant', 'tenant_group'),
-        ),
-        required=False,
-        widget=APISelect(
-            api_url='/api/ipam/prefixes/?group_id={{tenant_group}}&is_pool=true'
-        )
-    )
 
     class Meta:
         model = Package
-        fields = ['name', 'slug', 'group', 'ipv4_enabled', 'ipv6_enabled', 'multicast_enabled', 'service_type', 'speed_upload', 'speed_download', 'qos_profile', 'dhcp_pool', 'comments', 'tags']
+        fields = ['name', 'slug', 'ipv4_enabled', 'ipv6_enabled', 'multicast_enabled', 'speed_upload', 'speed_download', 'qos_profile', 'comments', 'tags']
 
 
 class PackageFilterForm(BootstrapMixin, CustomFieldFilterForm):
     model = Package
     q = forms.CharField(required=False, label='Search')
-    tenant = FilterChoiceField(
-        queryset=TenantGroup.objects.annotate(filter_count=Count('packages')),
-        to_field_name='slug',
-        null_label='-- None --'
-    )
 
 
 class PackageCSVForm(forms.ModelForm):
     slug = SlugField()
-    group = forms.ModelChoiceField(
-        queryset=TenantGroup.objects.all(),
-        required=False,
-        to_field_name='name',
-        help_text='Name of reseller',
-        error_messages={
-            'invalid_choice': 'Group not found.'
-        }
-    )
-    service_type = CSVChoiceField(
-        choices=SERVICE_TYPE_CHOICES,
-        help_text='Service type'
-    )
-    dhcp_pool = forms.ModelChoiceField(
-        queryset=Prefix.objects.all(),
-        required=False,
-        help_text='Prefix used for DHCP',
-        to_field_name='prefix',
-        error_messages={
-            'invalid_choice': 'Prefix not found.'
-        }
-    )
 
     class Meta:
         model = Package
@@ -200,9 +156,7 @@ class PackageCSVForm(forms.ModelForm):
 
 class PackageBulkEditForm(BootstrapMixin, CustomFieldBulkEditForm):
     pk = forms.ModelMultipleChoiceField(queryset=Tenant.objects.all(), widget=forms.MultipleHiddenInput)
-    group = forms.ModelChoiceField(queryset=TenantGroup.objects.all(), required=False)
     qos_profile = forms.CharField(max_length=100, required=False)
-    service_type = forms.ChoiceField(choices=add_blank_choice(SERVICE_TYPE_CHOICES), required=False)
 
     class Meta:
         nullable_fields = []

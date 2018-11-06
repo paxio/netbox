@@ -73,4 +73,4 @@ class PackageTable(BaseTable):
 
     class Meta(BaseTable.Meta):
         model = Package
-        fields = ('pk', 'name', 'group', 'ipv4_enabled', 'ipv6_enabled', 'multicast_enabled', 'service_type', 'speed_upload', 'speed_download', 'dhcp_pool')
+        fields = ('pk', 'name', 'ipv4_enabled', 'ipv6_enabled', 'multicast_enabled', 'speed_upload', 'speed_download')
