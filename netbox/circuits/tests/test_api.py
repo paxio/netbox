@@ -392,7 +392,6 @@ class CircuitTerminationTest(APITestCase):
             'site': self.site1.pk,
             'interface': self.interface5.pk,
             'port_speed': 1000000,
-            'interface': self.interface4.pk,
         }
 
         url = reverse('circuits-api:circuittermination-list')
@@ -406,7 +405,6 @@ class CircuitTerminationTest(APITestCase):
         self.assertEqual(circuittermination4.site_id, data['site'])
         self.assertEqual(circuittermination4.interface_id, data['interface'])
         self.assertEqual(circuittermination4.port_speed, data['port_speed'])
-        self.assertEqual(circuittermination4.interface, self.interface4)
 
     def test_update_circuittermination(self):
 
@@ -420,7 +418,6 @@ class CircuitTerminationTest(APITestCase):
             'site': self.site2.pk,
             'interface': self.interface6.pk,
             'port_speed': 1000000,
-            'interface': self.interface4.pk,
         }
 
         url = reverse('circuits-api:circuittermination-detail', kwargs={'pk': circuittermination5.pk})
@@ -433,7 +430,6 @@ class CircuitTerminationTest(APITestCase):
         self.assertEqual(circuittermination1.site_id, data['site'])
         self.assertEqual(circuittermination1.interface_id, data['interface'])
         self.assertEqual(circuittermination1.port_speed, data['port_speed'])
-        self.assertEqual(circuittermination1.interface, self.interface4)
 
     def test_delete_circuittermination(self):
 
