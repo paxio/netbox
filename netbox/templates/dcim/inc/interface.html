@@ -44,16 +44,17 @@
     {# VLANs #}
     <td>
     {% if iface.mode == 100  %}
-        A {{ iface.untagged_vlan.vid }}
+        <a title="Access">A</a> {{ iface.untagged_vlan.vid }}
     {% elif iface.mode == 200 %}
-        T
+        <a title="Tagged">T</a>
     {% elif iface.mode == 300 %}
-        TA
+        <a title="Tagged All">TA</a>
     {% elif iface.mode == 400 %}
-        DT
+        <a title="Double tagged">DT</a>
     {% endif %}
 
-    {{ iface.tagged_vlans.all|humanize_vlans }}</td>
+    {{ iface.tagged_vlans.all|humanize_vlans }}
+    {% if iface.untagged_vlan and iface.mode != 100 %}<a title="Untagged">UT</a> {{ iface.untagged_vlan.vid }}{% endif %}</td>
 
     {# Connection or type #}
     {% if iface.is_lag %}
