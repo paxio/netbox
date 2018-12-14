@@ -236,6 +236,7 @@ class SiteBulkDeleteView(PermissionRequiredMixin, BulkDeleteView):
     table = tables.SiteTable
     default_return_url = 'dcim:site_list'
 
+
 #
 # Rack groups
 #
