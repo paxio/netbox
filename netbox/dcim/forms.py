@@ -1809,7 +1809,7 @@ class InterfaceAssignVLANsForm(BootstrapMixin, forms.ModelForm):
 
         # Add grouped global VLANs
         for group in VLANGroup.objects.filter(site=None):
-            global_group_vlans = VLAN.objects.filter(group=group).exclude(pk__in=assigned_vlans)
+            global_group_vlans = VLAN.objects.filter(group=group).exclude(pk__in=assigned_vlans).order_by('vid')
             vlan_choices.append(
                 (group.name, [(vlan.pk, vlan) for vlan in global_group_vlans])
             )
@@ -1818,19 +1818,19 @@ class InterfaceAssignVLANsForm(BootstrapMixin, forms.ModelForm):
         if site is not None:
 
             # Add non-grouped site VLANs
-            site_vlans = VLAN.objects.filter(site=site, group=None).exclude(pk__in=assigned_vlans)
+            site_vlans = VLAN.objects.filter(site=site, group=None).exclude(pk__in=assigned_vlans).order_by('vid')
             vlan_choices.append((site.name, [(vlan.pk, vlan) for vlan in site_vlans]))
 
             # Add grouped site VLANs
             for group in VLANGroup.objects.filter(site=site):
-                site_group_vlans = VLAN.objects.filter(group=group).exclude(pk__in=assigned_vlans)
+                site_group_vlans = VLAN.objects.filter(group=group).exclude(pk__in=assigned_vlans).order_by('vid')
                 vlan_choices.append((
                     '{} / {}'.format(group.site.name, group.name),
                     [(vlan.pk, vlan) for vlan in site_group_vlans]
                 ))
 
         # Add non-grouped global VLANs
-        global_vlans = VLAN.objects.filter(site=None, group=None).exclude(pk__in=assigned_vlans)
+        global_vlans = VLAN.objects.filter(site=None, group=None).exclude(pk__in=assigned_vlans).order_by('vid')
         vlan_choices.append((
             'Global', [(vlan.pk, vlan) for vlan in global_vlans])
         )
