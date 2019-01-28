@@ -42,4 +42,3 @@ class PackageViewSet(CustomFieldModelViewSet):
     serializer_class = serializers.PackageSerializer
     write_serializer_class = serializers.WritablePackageSerializer
     filter_class = filters.PackageFilter
-

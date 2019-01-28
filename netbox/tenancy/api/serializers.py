@@ -59,4 +59,3 @@ class WritablePackageSerializer(CustomFieldModelSerializer):
             'id', 'name', 'slug', 'ipv4_enabled', 'ipv6_enabled', 'multicast_enabled', 'speed_upload', 'speed_download',
             'qos_profile', 'comments', 'custom_fields', 'created', 'last_updated'
         ]
-
