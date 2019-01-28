@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 from extras.api.views import CustomFieldModelViewSet
 from tenancy import filters
 from tenancy.models import Tenant, TenantGroup, Package
@@ -22,7 +20,7 @@ class TenancyFieldChoicesViewSet(FieldChoicesViewSet):
 class TenantGroupViewSet(ModelViewSet):
     queryset = TenantGroup.objects.all()
     serializer_class = serializers.TenantGroupSerializer
-    filter_class = filters.TenantGroupFilter
+    filterset_class = filters.TenantGroupFilter
 
 
 #
@@ -44,3 +42,4 @@ class PackageViewSet(CustomFieldModelViewSet):
     serializer_class = serializers.PackageSerializer
     write_serializer_class = serializers.WritablePackageSerializer
     filter_class = filters.PackageFilter
+
