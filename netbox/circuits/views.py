@@ -156,7 +156,7 @@ class CircuitView(View):
             circuit=circuit, term_side=TERM_SIDE_Z
         ).first()
         termination_y = CircuitTermination.objects.select_related(
-            'site__region', 'interface__device'
+            'site__region', 'connected_endpoint__device'
         ).filter(
             circuit=circuit, term_side=TERM_SIDE_Y
         ).first()
