@@ -150,7 +150,7 @@ class TenancyForm(ChainedFieldsMixin, forms.Form):
 #  Packages
 #
 
-class PackageForm(BootstrapMixin, ChainedFieldsMixin, forms.ModelForm):
+class PackageForm(BootstrapMixin, CustomFieldForm):
     slug = SlugField()
 
     class Meta:
@@ -173,8 +173,7 @@ class PackageCSVForm(forms.ModelForm):
             'name': 'Package name'
         }
 
-
-class PackageBulkEditForm(BootstrapMixin, CustomFieldBulkEditForm):
+class PackageBulkEditForm(BootstrapMixin, AddRemoveTagsForm, CustomFieldBulkEditForm):
     pk = forms.ModelMultipleChoiceField(queryset=Tenant.objects.all(), widget=forms.MultipleHiddenInput)
     qos_profile = forms.CharField(max_length=100, required=False)
 

@@ -132,7 +132,7 @@ class TenantBulkDeleteView(PermissionRequiredMixin, BulkDeleteView):
 #
 
 class PackageListView(ObjectListView):
-    queryset = Package.objects.annotate(package_count=Count('id'))
+    queryset = Package.objects.annotate(package_count=Count('name'))
     filter = filters.PackageFilter
     filter_form = forms.PackageFilterForm
     table = tables.PackageTable
