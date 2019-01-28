@@ -368,7 +368,6 @@ class CircuitTerminationTest(APITestCase):
             'circuit': self.circuit3.pk,
             'term_side': TERM_SIDE_A,
             'site': self.site1.pk,
-            'interface': self.interface5.pk,
             'port_speed': 1000000,
         }
 
@@ -381,7 +380,6 @@ class CircuitTerminationTest(APITestCase):
         self.assertEqual(circuittermination4.circuit_id, data['circuit'])
         self.assertEqual(circuittermination4.term_side, data['term_side'])
         self.assertEqual(circuittermination4.site_id, data['site'])
-        self.assertEqual(circuittermination4.interface_id, data['interface'])
         self.assertEqual(circuittermination4.port_speed, data['port_speed'])
 
     def test_update_circuittermination(self):

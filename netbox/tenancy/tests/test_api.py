@@ -217,7 +217,7 @@ class PackageTest(APITestCase):
 
     def setUp(self):
 
-        super(PackageTest, self).setUp()
+        super().setUp()
 
         self.package1 = Package.objects.create(name='Test Package 1', slug='test-package-1', ipv4_enabled=True, ipv6_enabled=True, multicast_enabled=True, speed_upload=100000, speed_download=100000, qos_profile='normal_qos')
         self.package2 = Package.objects.create(name='Test Package 2', slug='test-package-2', ipv4_enabled=False, ipv6_enabled=True, multicast_enabled=False, speed_upload=10000, speed_download=10000, qos_profile='special_qos')
