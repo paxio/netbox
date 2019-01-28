@@ -173,6 +173,7 @@ class PackageCSVForm(forms.ModelForm):
             'name': 'Package name'
         }
 
+
 class PackageBulkEditForm(BootstrapMixin, AddRemoveTagsForm, CustomFieldBulkEditForm):
     pk = forms.ModelMultipleChoiceField(queryset=Tenant.objects.all(), widget=forms.MultipleHiddenInput)
     qos_profile = forms.CharField(max_length=100, required=False)
