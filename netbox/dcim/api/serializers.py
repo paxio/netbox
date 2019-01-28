@@ -10,16 +10,10 @@ from dcim.models import (
     RackGroup, RackReservation, RackRole, RearPort, RearPortTemplate, Region, Site, VirtualChassis,
 )
 from extras.api.customfields import CustomFieldModelSerializer
-<<<<<<< HEAD
-from ipam.models import IPAddress, VLAN, VLANGroup
-from tenancy.api.serializers import NestedTenantSerializer
-from users.api.serializers import NestedUserSerializer
-=======
 from ipam.api.nested_serializers import NestedIPAddressSerializer, NestedVLANSerializer
-from ipam.models import VLAN
+from ipam.models import VLAN, VLANGroup
 from tenancy.api.nested_serializers import NestedTenantSerializer
 from users.api.nested_serializers import NestedUserSerializer
->>>>>>> v2.5.3
 from utilities.api import (
     ChoiceField, ContentTypeField, SerializedPKRelatedField, TimeZoneField, ValidatedModelSerializer,
     WritableNestedSerializer, get_serializer_for_model,
@@ -396,7 +390,6 @@ class PowerPortSerializer(TaggitSerializer, ConnectedEndpointSerializer):
         ]
 
 
-<<<<<<< HEAD
 class InterfaceVLANGroupSerializer(WritableNestedSerializer):
     url = serializers.HyperlinkedIdentityField(view_name='ipam-api:vlangroup-detail')
 
@@ -415,10 +408,7 @@ class InterfaceVLANSerializer(WritableNestedSerializer):
         fields = ['id', 'url', 'vid', 'name', 'display_name', 'group']
 
 
-class InterfaceSerializer(TaggitSerializer, IsConnectedMixin, ValidatedModelSerializer):
-=======
 class InterfaceSerializer(TaggitSerializer, ConnectedEndpointSerializer):
->>>>>>> v2.5.3
     device = NestedDeviceSerializer()
     form_factor = ChoiceField(choices=IFACE_FF_CHOICES, required=False)
     lag = NestedInterfaceSerializer(required=False, allow_null=True)

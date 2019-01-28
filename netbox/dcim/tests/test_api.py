@@ -2,15 +2,8 @@ from django.urls import reverse
 from netaddr import IPNetwork
 from rest_framework import status
 
-<<<<<<< HEAD
-from dcim.constants import (
-    IFACE_FF_1GE_FIXED, IFACE_FF_LAG, IFACE_MODE_TAGGED, IFACE_MODE_ACCESS, SITE_STATUS_ACTIVE, SUBDEVICE_ROLE_CHILD,
-    SUBDEVICE_ROLE_PARENT,
-)
-=======
 from circuits.models import Circuit, CircuitTermination, CircuitType, Provider
 from dcim.constants import *
->>>>>>> v2.5.3
 from dcim.models import (
     Cable, ConsolePort, ConsolePortTemplate, ConsoleServerPort, ConsoleServerPortTemplate, Device, DeviceBay,
     DeviceBayTemplate, DeviceRole, DeviceType, FrontPort, Interface, InterfaceTemplate, Manufacturer,

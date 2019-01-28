@@ -1,14 +1,9 @@
 from taggit_serializer.serializers import TaggitSerializer, TagListSerializerField
 
 from extras.api.customfields import CustomFieldModelSerializer
-<<<<<<< HEAD
 from tenancy.models import Tenant, TenantGroup, Package
-from utilities.api import ValidatedModelSerializer, WritableNestedSerializer
-=======
-from tenancy.models import Tenant, TenantGroup
 from utilities.api import ValidatedModelSerializer
 from .nested_serializers import *
->>>>>>> v2.5.3
 
 
 #
@@ -34,14 +29,6 @@ class TenantSerializer(TaggitSerializer, CustomFieldModelSerializer):
         ]
 
 
-class NestedTenantSerializer(WritableNestedSerializer):
-    url = serializers.HyperlinkedIdentityField(view_name='tenancy-api:tenant-detail')
-
-    class Meta:
-        model = Tenant
-        fields = ['id', 'url', 'name', 'slug', 'description']
-
-
 class WritableTenantSerializer(CustomFieldModelSerializer):
 
     class Meta:
@@ -52,14 +39,6 @@ class WritableTenantSerializer(CustomFieldModelSerializer):
 #
 #  Packages
 #
-
-class NestedPackageSerializer(WritableNestedSerializer):
-    url = serializers.HyperlinkedIdentityField(view_name='tenancy-api:package-detail')
-
-    class Meta:
-        model = Package
-        fields = ['id', 'url', 'name', 'slug']
-
 
 class PackageSerializer(TaggitSerializer, CustomFieldModelSerializer):
     tags = TagListSerializerField(required=False)
