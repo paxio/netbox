@@ -242,6 +242,7 @@ DEVICE_STATUS_PLANNED = 2
 DEVICE_STATUS_STAGED = 3
 DEVICE_STATUS_FAILED = 4
 DEVICE_STATUS_INVENTORY = 5
+DEVICE_STATUS_QA = 6
 DEVICE_STATUS_CHOICES = [
     [DEVICE_STATUS_ACTIVE, 'Active'],
     [DEVICE_STATUS_OFFLINE, 'Offline'],
@@ -249,6 +250,7 @@ DEVICE_STATUS_CHOICES = [
     [DEVICE_STATUS_STAGED, 'Staged'],
     [DEVICE_STATUS_FAILED, 'Failed'],
     [DEVICE_STATUS_INVENTORY, 'Inventory'],
+    [DEVICE_STATUS_QA, 'Quality assurance'],
 ]
 
 # Site statuses
@@ -269,6 +271,7 @@ STATUS_CLASSES = {
     3: 'primary',
     4: 'danger',
     5: 'default',
+    6: 'info',
 }
 
 # Console/power/interface connection statuses
