@@ -55,6 +55,7 @@ class CircuitTypeFilter(django_filters.FilterSet):
 
 class CircuitFilter(CustomFieldFilterSet, django_filters.FilterSet):
     id__in = NumericInFilter(name='id', lookup_expr='in')
+    status__in = NumericInFilter(name='status', lookup_expr='in')
     q = django_filters.CharFilter(
         method='search',
         label='Search',
