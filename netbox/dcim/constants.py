@@ -272,6 +272,7 @@ STATUS_CLASSES = {
     4: 'danger',
     5: 'default',
     6: 'info',
+    7: 'primary',
 }
 
 # Console/power/interface connection statuses
