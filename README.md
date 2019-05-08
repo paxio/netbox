@@ -37,7 +37,7 @@ and run `upgrade.sh`.
 
 ## Alternative Installations
 
-* [Docker container](https://github.com/ninech/netbox-docker) (via [@cimnine](https://github.com/cimnine))
+* [Docker container](https://github.com/netbox-community/netbox-docker) (via [@cimnine](https://github.com/cimnine))
 * [Vagrant deployment](https://github.com/ryanmerolle/netbox-vagrant) (via [@ryanmerolle](https://github.com/ryanmerolle))
 * [Ansible deployment](https://github.com/lae/ansible-role-netbox) (via [@lae](https://github.com/lae))
 
@@ -45,13 +45,13 @@ and run `upgrade.sh`.
 
 ## Supported SDK
 
-- [pynetbox](https://github.com/digitalocean/pynetbox) Python API client library for Netbox.
+- [pynetbox](https://github.com/digitalocean/pynetbox) - A Python API client library for Netbox
 
 ## Community SDK
 
-- [netbox-client-ruby](https://github.com/ninech/netbox-client-ruby) A ruby client library for Netbox v2.
+- [netbox-client-ruby](https://github.com/ninech/netbox-client-ruby) - A Ruby client library for Netbox
+- [powerbox](https://github.com/BatmanAMA/powerbox) - A PowerShell library for Netbox
 
 ## Ansible Inventory
 
-- [netbox-as-ansible-inventory](https://github.com/AAbouZaid/netbox-as-ansible-inventory) Ansible dynamic inventory script for Netbox.
-
+- [netbox-as-ansible-inventory](https://github.com/AAbouZaid/netbox-as-ansible-inventory) - Ansible dynamic inventory script for Netbox

@@ -1,3 +1,4 @@
+from django.contrib.contenttypes.models import ContentType
 from rest_framework import serializers
 from rest_framework.validators import UniqueTogetherValidator
 from taggit_serializer.serializers import TaggitSerializer, TagListSerializerField
@@ -180,8 +181,8 @@ class DeviceTypeSerializer(TaggitSerializer, CustomFieldModelSerializer):
     class Meta:
         model = DeviceType
         fields = [
-            'id', 'manufacturer', 'model', 'slug', 'part_number', 'u_height', 'is_full_depth', 'subdevice_role',
-            'comments', 'tags', 'custom_fields', 'created', 'last_updated', 'instance_count',
+            'id', 'manufacturer', 'model', 'slug', 'display_name', 'part_number', 'u_height', 'is_full_depth',
+            'subdevice_role', 'comments', 'tags', 'custom_fields', 'created', 'last_updated', 'instance_count',
         ]
 
 
@@ -520,12 +521,16 @@ class InventoryItemSerializer(TaggitSerializer, ValidatedModelSerializer):
 #
 
 class CableSerializer(ValidatedModelSerializer):
-    termination_a_type = ContentTypeField()
-    termination_b_type = ContentTypeField()
+    termination_a_type = ContentTypeField(
+        queryset=ContentType.objects.filter(model__in=CABLE_TERMINATION_TYPES)
+    )
+    termination_b_type = ContentTypeField(
+        queryset=ContentType.objects.filter(model__in=CABLE_TERMINATION_TYPES)
+    )
     termination_a = serializers.SerializerMethodField(read_only=True)
     termination_b = serializers.SerializerMethodField(read_only=True)
     status = ChoiceField(choices=CONNECTION_STATUS_CHOICES, required=False)
-    length_unit = ChoiceField(choices=CABLE_LENGTH_UNIT_CHOICES, required=False)
+    length_unit = ChoiceField(choices=CABLE_LENGTH_UNIT_CHOICES, required=False, allow_null=True)
 
     class Meta:
         model = Cable

@@ -16,14 +16,14 @@ from taggit.managers import TaggableManager
 from timezone_field import TimeZoneField
 
 from extras.models import ConfigContextModel, CustomFieldModel, ObjectChange
-from utilities.fields import ColorField, NullableCharField
+from utilities.fields import ColorField
 from utilities.managers import NaturalOrderingManager
 from utilities.models import ChangeLoggedModel
 from utilities.utils import serialize_object, to_meters
 from .constants import *
 from .exceptions import LoopDetected
 from .fields import ASNField, MACAddressField
-from .managers import DeviceComponentManager, InterfaceManager
+from .managers import InterfaceManager
 
 
 class ComponentTemplateModel(models.Model):
@@ -54,7 +54,11 @@ class ComponentModel(models.Model):
         """
         Log an ObjectChange including the parent Device/VM.
         """
-        parent = self.device if self.device is not None else getattr(self, 'virtual_machine', None)
+        try:
+            parent = getattr(self, 'device', None) or getattr(self, 'virtual_machine', None)
+        except ObjectDoesNotExist:
+            # The parent device/VM has already been deleted
+            parent = None
         ObjectChange(
             user=user,
             request_id=request_id,
@@ -63,6 +67,10 @@ class ComponentModel(models.Model):
             action=action,
             object_data=serialize_object(self)
         ).save()
+
+    @property
+    def parent(self):
+        return getattr(self, 'device', None)
 
 
 class CableTermination(models.Model):
@@ -158,6 +166,14 @@ class CableTermination(models.Model):
 
         return path + next_segment
 
+    def get_cable_peer(self):
+        if self.cable is None:
+            return None
+        if self._cabled_as_a.exists():
+            return self.cable.termination_b
+        if self._cabled_as_b.exists():
+            return self.cable.termination_a
+
 
 #
 # Regions
@@ -201,8 +217,7 @@ class Region(MPTTModel, ChangeLoggedModel):
             self.parent.name if self.parent else None,
         )
 
-    @property
-    def site_count(self):
+    def get_site_count(self):
         return Site.objects.filter(
             Q(region=self) |
             Q(region__in=self.get_descendants())
@@ -454,7 +469,7 @@ class Rack(ChangeLoggedModel, CustomFieldModel):
     name = models.CharField(
         max_length=50
     )
-    facility_id = NullableCharField(
+    facility_id = models.CharField(
         max_length=50,
         blank=True,
         null=True,
@@ -495,7 +510,7 @@ class Rack(ChangeLoggedModel, CustomFieldModel):
         blank=True,
         verbose_name='Serial number'
     )
-    asset_tag = NullableCharField(
+    asset_tag = models.CharField(
         max_length=50,
         blank=True,
         null=True,
@@ -964,7 +979,7 @@ class DeviceType(ChangeLoggedModel, CustomFieldModel):
             })
 
     @property
-    def full_name(self):
+    def display_name(self):
         return '{} {}'.format(self.manufacturer.name, self.model)
 
     @property
@@ -989,7 +1004,7 @@ class ConsolePortTemplate(ComponentTemplateModel):
         max_length=50
     )
 
-    objects = DeviceComponentManager()
+    objects = NaturalOrderingManager()
 
     class Meta:
         ordering = ['device_type', 'name']
@@ -1012,7 +1027,7 @@ class ConsoleServerPortTemplate(ComponentTemplateModel):
         max_length=50
     )
 
-    objects = DeviceComponentManager()
+    objects = NaturalOrderingManager()
 
     class Meta:
         ordering = ['device_type', 'name']
@@ -1035,7 +1050,7 @@ class PowerPortTemplate(ComponentTemplateModel):
         max_length=50
     )
 
-    objects = DeviceComponentManager()
+    objects = NaturalOrderingManager()
 
     class Meta:
         ordering = ['device_type', 'name']
@@ -1058,7 +1073,7 @@ class PowerOutletTemplate(ComponentTemplateModel):
         max_length=50
     )
 
-    objects = DeviceComponentManager()
+    objects = NaturalOrderingManager()
 
     class Meta:
         ordering = ['device_type', 'name']
@@ -1124,7 +1139,7 @@ class FrontPortTemplate(ComponentTemplateModel):
         validators=[MinValueValidator(1), MaxValueValidator(64)]
     )
 
-    objects = DeviceComponentManager()
+    objects = NaturalOrderingManager()
 
     class Meta:
         ordering = ['device_type', 'name']
@@ -1173,7 +1188,7 @@ class RearPortTemplate(ComponentTemplateModel):
         validators=[MinValueValidator(1), MaxValueValidator(64)]
     )
 
-    objects = DeviceComponentManager()
+    objects = NaturalOrderingManager()
 
     class Meta:
         ordering = ['device_type', 'name']
@@ -1196,7 +1211,7 @@ class DeviceBayTemplate(ComponentTemplateModel):
         max_length=50
     )
 
-    objects = DeviceComponentManager()
+    objects = NaturalOrderingManager()
 
     class Meta:
         ordering = ['device_type', 'name']
@@ -1338,7 +1353,7 @@ class Device(ChangeLoggedModel, ConfigContextModel, CustomFieldModel):
         blank=True,
         null=True
     )
-    name = NullableCharField(
+    name = models.CharField(
         max_length=64,
         blank=True,
         null=True,
@@ -1349,7 +1364,7 @@ class Device(ChangeLoggedModel, ConfigContextModel, CustomFieldModel):
         blank=True,
         verbose_name='Serial number'
     )
-    asset_tag = NullableCharField(
+    asset_tag = models.CharField(
         max_length=50,
         blank=True,
         null=True,
@@ -1689,6 +1704,21 @@ class Device(ChangeLoggedModel, ConfigContextModel, CustomFieldModel):
             filter |= Q(device__virtual_chassis=self.virtual_chassis, mgmt_only=False)
         return Interface.objects.filter(filter)
 
+    def get_cables(self, pk_list=False):
+        """
+        Return a QuerySet or PK list matching all Cables connected to a component of this Device.
+        """
+        cable_pks = []
+        for component_model in [
+            ConsolePort, ConsoleServerPort, PowerPort, PowerOutlet, Interface, FrontPort, RearPort
+        ]:
+            cable_pks += component_model.objects.filter(
+                device=self, cable__isnull=False
+            ).values_list('cable', flat=True)
+        if pk_list:
+            return cable_pks
+        return Cable.objects.filter(pk__in=cable_pks)
+
     def get_children(self):
         """
         Return the set of child Devices installed in DeviceBays within this Device.
@@ -1727,7 +1757,7 @@ class ConsolePort(CableTermination, ComponentModel):
         blank=True
     )
 
-    objects = DeviceComponentManager()
+    objects = NaturalOrderingManager()
     tags = TaggableManager()
 
     csv_headers = ['device', 'name']
@@ -1770,7 +1800,7 @@ class ConsoleServerPort(CableTermination, ComponentModel):
         blank=True
     )
 
-    objects = DeviceComponentManager()
+    objects = NaturalOrderingManager()
     tags = TaggableManager()
 
     csv_headers = ['device', 'name']
@@ -1819,7 +1849,7 @@ class PowerPort(CableTermination, ComponentModel):
         blank=True
     )
 
-    objects = DeviceComponentManager()
+    objects = NaturalOrderingManager()
     tags = TaggableManager()
 
     csv_headers = ['device', 'name']
@@ -1862,7 +1892,7 @@ class PowerOutlet(CableTermination, ComponentModel):
         blank=True
     )
 
-    objects = DeviceComponentManager()
+    objects = NaturalOrderingManager()
     tags = TaggableManager()
 
     csv_headers = ['device', 'name']
@@ -2183,7 +2213,7 @@ class FrontPort(CableTermination, ComponentModel):
         blank=True
     )
 
-    objects = DeviceComponentManager()
+    objects = NaturalOrderingManager()
     tags = TaggableManager()
 
     csv_headers = ['device', 'name', 'type', 'rear_port', 'rear_port_position', 'description']
@@ -2249,7 +2279,7 @@ class RearPort(CableTermination, ComponentModel):
         blank=True
     )
 
-    objects = DeviceComponentManager()
+    objects = NaturalOrderingManager()
     tags = TaggableManager()
 
     csv_headers = ['device', 'name', 'type', 'positions', 'description']
@@ -2296,7 +2326,7 @@ class DeviceBay(ComponentModel):
         null=True
     )
 
-    objects = DeviceComponentManager()
+    objects = NaturalOrderingManager()
     tags = TaggableManager()
 
     csv_headers = ['device', 'name', 'installed_device']
@@ -2373,7 +2403,7 @@ class InventoryItem(ComponentModel):
         verbose_name='Serial number',
         blank=True
     )
-    asset_tag = NullableCharField(
+    asset_tag = models.CharField(
         max_length=50,
         unique=True,
         blank=True,
@@ -2408,7 +2438,7 @@ class InventoryItem(ComponentModel):
 
     def to_csv(self):
         return (
-            self.device.name or '{' + self.device.pk + '}',
+            self.device.name or '{{{}}}'.format(self.device.pk),
             self.name,
             self.manufacturer.name if self.manufacturer else None,
             self.part_id,
@@ -2542,16 +2572,15 @@ class Cable(ChangeLoggedModel):
             ('termination_b_type', 'termination_b_id'),
         )
 
-    def __init__(self, *args, **kwargs):
-
-        super().__init__(*args, **kwargs)
-
-        # Create an ID string for use by __str__(). We have to save a copy of pk since it's nullified after .delete()
-        # is called.
-        self.id_string = '#{}'.format(self.pk)
-
     def __str__(self):
-        return self.label or self.id_string
+        if self.label:
+            return self.label
+
+        # Save a copy of the PK on the instance since it's nullified if .delete() is called
+        if not hasattr(self, 'id_string'):
+            self.id_string = '#{}'.format(self.pk)
+
+        return self.id_string
 
     def get_absolute_url(self):
         return reverse('dcim:cable', args=[self.pk])
@@ -2635,6 +2664,9 @@ class Cable(ChangeLoggedModel):
             self.length,
             self.length_unit,
         )
+
+    def get_status_class(self):
+        return 'success' if self.status else 'info'
 
     def get_path_endpoints(self):
         """

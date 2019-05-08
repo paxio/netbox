@@ -1,5 +1,6 @@
 import re
 
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.auth.mixins import PermissionRequiredMixin
 from django.core.paginator import EmptyPage, PageNotAnInteger
@@ -135,7 +136,13 @@ class BulkDisconnectView(GetReturnURLMixin, View):
 #
 
 class RegionListView(ObjectListView):
-    queryset = Region.objects.all()
+    queryset = Region.objects.add_related_count(
+        Region.objects.all(),
+        Site,
+        'region',
+        'site_count',
+        cumulative=True
+    )
     filter = filters.RegionFilter
     filter_form = forms.RegionFilterForm
     table = tables.RegionTable
@@ -162,7 +169,7 @@ class RegionBulkImportView(PermissionRequiredMixin, BulkImportView):
 
 class RegionBulkDeleteView(PermissionRequiredMixin, BulkDeleteView):
     permission_required = 'dcim.delete_region'
-    queryset = Region.objects.annotate(site_count=Count('sites'))
+    queryset = Region.objects.all()
     filter = filters.RegionFilter
     table = tables.RegionTable
     default_return_url = 'dcim:region_list'
@@ -355,8 +362,9 @@ class RackElevationListView(View):
         total_count = racks.count()
 
         # Pagination
-        paginator = EnhancedPaginator(racks, 25)
+        per_page = request.GET.get('per_page', settings.PAGINATE_COUNT)
         page_number = request.GET.get('page', 1)
+        paginator = EnhancedPaginator(racks, per_page)
         try:
             page = paginator.page(page_number)
         except PageNotAnInteger:
@@ -1368,6 +1376,14 @@ class FrontPortDeleteView(PermissionRequiredMixin, ObjectDeleteView):
     model = FrontPort
 
 
+class FrontPortBulkEditView(PermissionRequiredMixin, BulkEditView):
+    permission_required = 'dcim.change_frontport'
+    queryset = FrontPort.objects.all()
+    parent_model = Device
+    table = tables.FrontPortTable
+    form = forms.FrontPortBulkEditForm
+
+
 class FrontPortBulkRenameView(PermissionRequiredMixin, BulkRenameView):
     permission_required = 'dcim.change_frontport'
     queryset = FrontPort.objects.all()
@@ -1410,6 +1426,14 @@ class RearPortEditView(PermissionRequiredMixin, ObjectEditView):
 class RearPortDeleteView(PermissionRequiredMixin, ObjectDeleteView):
     permission_required = 'dcim.delete_rearport'
     model = RearPort
+
+
+class RearPortBulkEditView(PermissionRequiredMixin, BulkEditView):
+    permission_required = 'dcim.change_rearport'
+    queryset = RearPort.objects.all()
+    parent_model = Device
+    table = tables.RearPortTable
+    form = forms.RearPortBulkEditForm
 
 
 class RearPortBulkRenameView(PermissionRequiredMixin, BulkRenameView):
@@ -1790,14 +1814,20 @@ class InterfaceConnectionsListView(ObjectListView):
     def queryset_to_csv(self):
         csv_data = [
             # Headers
-            ','.join(['device_a', 'interface_a', 'device_b', 'interface_b', 'connection_status'])
+            ','.join([
+                'device_a', 'interface_a', 'interface_a_description',
+                'device_b', 'interface_b', 'interface_b_description',
+                'connection_status'
+            ])
         ]
         for obj in self.queryset:
             csv = csv_format([
                 obj.connected_endpoint.device.identifier if obj.connected_endpoint else None,
                 obj.connected_endpoint.name if obj.connected_endpoint else None,
+                obj.connected_endpoint.description if obj.connected_endpoint else None,
                 obj.device.identifier,
                 obj.name,
+                obj.description,
                 obj.get_connection_status_display(),
             ])
             csv_data.append(csv)

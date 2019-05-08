@@ -29,6 +29,12 @@
                 Edit this tag
             </a>
         {% endif %}
+        {% if perms.taggit.delete_tag %}
+            <a href="{% url 'extras:tag_delete' slug=tag.slug %}" class="btn btn-danger">
+                <span class="glyphicon glyphicon-trash" aria-hidden="true"></span>
+                Delete this tag
+            </a>
+        {% endif %}
     </div>
     <h1>{% block title %}Tag: {{ tag }}{% endblock %}</h1>
 {% endblock %}
@@ -64,6 +70,7 @@
         </div>
         <div class="col-md-6">
             {% include 'panel_table.html' with table=items_table heading='Tagged Objects' %}
+            {% include 'inc/paginator.html' with paginator=items_table.paginator page=items_table.page %}
         </div>
     </div>
 {% endblock %}

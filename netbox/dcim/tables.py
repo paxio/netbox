@@ -44,7 +44,7 @@ REGION_ACTIONS = """
     <i class="fa fa-history"></i>
 </a>
 {% if perms.dcim.change_region %}
-    <a href="{% url 'dcim:region_edit' pk=record.pk %}" class="btn btn-xs btn-warning"><i class="glyphicon glyphicon-pencil" aria-hidden="true"></i></a>
+    <a href="{% url 'dcim:region_edit' pk=record.pk %}?return_url={{ request.path }}" class="btn btn-xs btn-warning"><i class="glyphicon glyphicon-pencil" aria-hidden="true"></i></a>
 {% endif %}
 """
 
@@ -56,7 +56,7 @@ RACKGROUP_ACTIONS = """
     <i class="fa fa-eye"></i>
 </a>
 {% if perms.dcim.change_rackgroup %}
-    <a href="{% url 'dcim:rackgroup_edit' pk=record.pk %}" class="btn btn-xs btn-warning" title="Edit">
+    <a href="{% url 'dcim:rackgroup_edit' pk=record.pk %}?return_url={{ request.path }}" class="btn btn-xs btn-warning" title="Edit">
         <i class="glyphicon glyphicon-pencil"></i>
     </a>
 {% endif %}
@@ -67,7 +67,7 @@ RACKROLE_ACTIONS = """
     <i class="fa fa-history"></i>
 </a>
 {% if perms.dcim.change_rackrole %}
-    <a href="{% url 'dcim:rackrole_edit' pk=record.pk %}" class="btn btn-xs btn-warning"><i class="glyphicon glyphicon-pencil" aria-hidden="true"></i></a>
+    <a href="{% url 'dcim:rackrole_edit' pk=record.pk %}?return_url={{ request.path }}" class="btn btn-xs btn-warning"><i class="glyphicon glyphicon-pencil" aria-hidden="true"></i></a>
 {% endif %}
 """
 
@@ -88,7 +88,7 @@ RACKRESERVATION_ACTIONS = """
     <i class="fa fa-history"></i>
 </a>
 {% if perms.dcim.change_rackreservation %}
-    <a href="{% url 'dcim:rackreservation_edit' pk=record.pk %}" class="btn btn-xs btn-warning"><i class="glyphicon glyphicon-pencil" aria-hidden="true"></i></a>
+    <a href="{% url 'dcim:rackreservation_edit' pk=record.pk %}?return_url={{ request.path }}" class="btn btn-xs btn-warning"><i class="glyphicon glyphicon-pencil" aria-hidden="true"></i></a>
 {% endif %}
 """
 
@@ -97,7 +97,7 @@ MANUFACTURER_ACTIONS = """
     <i class="fa fa-history"></i>
 </a>
 {% if perms.dcim.change_manufacturer %}
-    <a href="{% url 'dcim:manufacturer_edit' slug=record.slug %}" class="btn btn-xs btn-warning"><i class="glyphicon glyphicon-pencil" aria-hidden="true"></i></a>
+    <a href="{% url 'dcim:manufacturer_edit' slug=record.slug %}?return_url={{ request.path }}" class="btn btn-xs btn-warning"><i class="glyphicon glyphicon-pencil" aria-hidden="true"></i></a>
 {% endif %}
 """
 
@@ -106,7 +106,7 @@ DEVICEROLE_ACTIONS = """
     <i class="fa fa-history"></i>
 </a>
 {% if perms.dcim.change_devicerole %}
-    <a href="{% url 'dcim:devicerole_edit' slug=record.slug %}" class="btn btn-xs btn-warning"><i class="glyphicon glyphicon-pencil" aria-hidden="true"></i></a>
+    <a href="{% url 'dcim:devicerole_edit' slug=record.slug %}?return_url={{ request.path }}" class="btn btn-xs btn-warning"><i class="glyphicon glyphicon-pencil" aria-hidden="true"></i></a>
 {% endif %}
 """
 
@@ -131,12 +131,13 @@ PLATFORM_ACTIONS = """
     <i class="fa fa-history"></i>
 </a>
 {% if perms.dcim.change_platform %}
-    <a href="{% url 'dcim:platform_edit' slug=record.slug %}" class="btn btn-xs btn-warning"><i class="glyphicon glyphicon-pencil" aria-hidden="true"></i></a>
+    <a href="{% url 'dcim:platform_edit' slug=record.slug %}?return_url={{ request.path }}" class="btn btn-xs btn-warning"><i class="glyphicon glyphicon-pencil" aria-hidden="true"></i></a>
 {% endif %}
 """
 
 DEVICE_ROLE = """
-<label class="label" style="background-color: #{{ record.device_role.color }}">{{ value }}</label>
+{% load helpers %}
+<label class="label" style="color: {{ record.device_role.color|fgcolor }}; background-color: #{{ record.device_role.color }}">{{ value }}</label>
 """
 
 STATUS_LABEL = """
@@ -167,7 +168,7 @@ VIRTUALCHASSIS_ACTIONS = """
     <i class="fa fa-history"></i>
 </a>
 {% if perms.dcim.change_virtualchassis %}
-    <a href="{% url 'dcim:virtualchassis_edit' pk=record.pk %}" class="btn btn-xs btn-warning"><i class="glyphicon glyphicon-pencil" aria-hidden="true"></i></a>
+    <a href="{% url 'dcim:virtualchassis_edit' pk=record.pk %}?return_url={{ request.path }}" class="btn btn-xs btn-warning"><i class="glyphicon glyphicon-pencil" aria-hidden="true"></i></a>
 {% endif %}
 """
 
@@ -195,7 +196,7 @@ class RegionTable(BaseTable):
     slug = tables.Column(verbose_name='Slug')
     actions = tables.TemplateColumn(
         template_code=REGION_ACTIONS,
-        attrs={'td': {'class': 'text-right'}},
+        attrs={'td': {'class': 'text-right noprint'}},
         verbose_name=''
     )
 
@@ -238,7 +239,7 @@ class RackGroupTable(BaseTable):
     slug = tables.Column()
     actions = tables.TemplateColumn(
         template_code=RACKGROUP_ACTIONS,
-        attrs={'td': {'class': 'text-right'}},
+        attrs={'td': {'class': 'text-right noprint'}},
         verbose_name=''
     )
 
@@ -257,7 +258,7 @@ class RackRoleTable(BaseTable):
     rack_count = tables.Column(verbose_name='Racks')
     color = tables.TemplateColumn(COLOR_LABEL, verbose_name='Color')
     slug = tables.Column(verbose_name='Slug')
-    actions = tables.TemplateColumn(template_code=RACKROLE_ACTIONS, attrs={'td': {'class': 'text-right'}},
+    actions = tables.TemplateColumn(template_code=RACKROLE_ACTIONS, attrs={'td': {'class': 'text-right noprint'}},
                                     verbose_name='')
 
     class Meta(BaseTable.Meta):
@@ -308,7 +309,7 @@ class RackReservationTable(BaseTable):
     rack = tables.LinkColumn('dcim:rack', args=[Accessor('rack.pk')])
     unit_list = tables.Column(orderable=False, verbose_name='Units')
     actions = tables.TemplateColumn(
-        template_code=RACKRESERVATION_ACTIONS, attrs={'td': {'class': 'text-right'}}, verbose_name=''
+        template_code=RACKRESERVATION_ACTIONS, attrs={'td': {'class': 'text-right noprint'}}, verbose_name=''
     )
 
     class Meta(BaseTable.Meta):
@@ -326,7 +327,7 @@ class ManufacturerTable(BaseTable):
     devicetype_count = tables.Column(verbose_name='Device Types')
     platform_count = tables.Column(verbose_name='Platforms')
     slug = tables.Column(verbose_name='Slug')
-    actions = tables.TemplateColumn(template_code=MANUFACTURER_ACTIONS, attrs={'td': {'class': 'text-right'}},
+    actions = tables.TemplateColumn(template_code=MANUFACTURER_ACTIONS, attrs={'td': {'class': 'text-right noprint'}},
                                     verbose_name='')
 
     class Meta(BaseTable.Meta):
@@ -462,7 +463,7 @@ class DeviceRoleTable(BaseTable):
     slug = tables.Column(verbose_name='Slug')
     actions = tables.TemplateColumn(
         template_code=DEVICEROLE_ACTIONS,
-        attrs={'td': {'class': 'text-right'}},
+        attrs={'td': {'class': 'text-right noprint'}},
         verbose_name=''
     )
 
@@ -491,7 +492,7 @@ class PlatformTable(BaseTable):
     )
     actions = tables.TemplateColumn(
         template_code=PLATFORM_ACTIONS,
-        attrs={'td': {'class': 'text-right'}},
+        attrs={'td': {'class': 'text-right noprint'}},
         verbose_name=''
     )
 
@@ -517,7 +518,7 @@ class DeviceTable(BaseTable):
     device_role = tables.TemplateColumn(DEVICE_ROLE, verbose_name='Role')
     device_type = tables.LinkColumn(
         'dcim:devicetype', args=[Accessor('device_type.pk')], verbose_name='Type',
-        text=lambda record: record.device_type.full_name
+        text=lambda record: record.device_type.display_name
     )
 
     class Meta(BaseTable.Meta):
@@ -646,6 +647,9 @@ class CableTable(BaseTable):
         orderable=False,
         verbose_name=''
     )
+    status = tables.TemplateColumn(
+        template_code=STATUS_LABEL
+    )
     length = tables.TemplateColumn(
         template_code=CABLE_LENGTH,
         order_by='_abs_length'
@@ -729,18 +733,18 @@ class InterfaceConnectionTable(BaseTable):
     )
     device_b = tables.LinkColumn(
         viewname='dcim:device',
-        accessor=Accessor('connected_endpoint.device'),
-        args=[Accessor('connected_endpoint.device.pk')],
+        accessor=Accessor('_connected_interface.device'),
+        args=[Accessor('_connected_interface.device.pk')],
         verbose_name='Device B'
     )
     interface_b = tables.LinkColumn(
         viewname='dcim:interface',
-        accessor=Accessor('connected_endpoint.name'),
-        args=[Accessor('connected_endpoint.pk')],
+        accessor=Accessor('_connected_interface'),
+        args=[Accessor('_connected_interface.pk')],
         verbose_name='Interface B'
     )
     description_b = tables.Column(
-        accessor=Accessor('connected_endpoint.description'),
+        accessor=Accessor('_connected_interface.description'),
         verbose_name='Description'
     )
 
@@ -775,7 +779,7 @@ class VirtualChassisTable(BaseTable):
     member_count = tables.Column(verbose_name='Members')
     actions = tables.TemplateColumn(
         template_code=VIRTUALCHASSIS_ACTIONS,
-        attrs={'td': {'class': 'text-right'}},
+        attrs={'td': {'class': 'text-right noprint'}},
         verbose_name=''
     )
 

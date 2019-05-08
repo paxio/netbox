@@ -7,19 +7,19 @@ from netaddr.core import AddrFormatError
 from dcim.models import DeviceRole, Interface, Platform, Region, Site
 from extras.filters import CustomFieldFilterSet
 from tenancy.models import Tenant
-from utilities.filters import NumericInFilter, TagFilter
+from utilities.filters import NameSlugSearchFilterSet, NumericInFilter, TagFilter, TreeNodeMultipleChoiceFilter
 from .constants import VM_STATUS_CHOICES
 from .models import Cluster, ClusterGroup, ClusterType, VirtualMachine
 
 
-class ClusterTypeFilter(django_filters.FilterSet):
+class ClusterTypeFilter(NameSlugSearchFilterSet):
 
     class Meta:
         model = ClusterType
         fields = ['name', 'slug']
 
 
-class ClusterGroupFilter(django_filters.FilterSet):
+class ClusterGroupFilter(NameSlugSearchFilterSet):
 
     class Meta:
         model = ClusterGroup
@@ -119,14 +119,15 @@ class VirtualMachineFilter(CustomFieldFilterSet):
         queryset=Cluster.objects.all(),
         label='Cluster (ID)',
     )
-    region_id = django_filters.NumberFilter(
-        method='filter_region',
-        field_name='pk',
+    region_id = TreeNodeMultipleChoiceFilter(
+        queryset=Region.objects.all(),
+        field_name='cluster__site__region__in',
         label='Region (ID)',
     )
-    region = django_filters.CharFilter(
-        method='filter_region',
-        field_name='slug',
+    region = TreeNodeMultipleChoiceFilter(
+        queryset=Region.objects.all(),
+        field_name='cluster__site__region__in',
+        to_field_name='slug',
         label='Region (slug)',
     )
     site_id = django_filters.ModelMultipleChoiceFilter(
@@ -184,18 +185,12 @@ class VirtualMachineFilter(CustomFieldFilterSet):
             Q(comments__icontains=value)
         )
 
-    def filter_region(self, queryset, name, value):
-        try:
-            region = Region.objects.get(**{name: value})
-        except ObjectDoesNotExist:
-            return queryset.none()
-        return queryset.filter(
-            Q(cluster__site__region=region) |
-            Q(cluster__site__region__in=region.get_descendants())
-        )
-
 
 class InterfaceFilter(django_filters.FilterSet):
+    q = django_filters.CharFilter(
+        method='search',
+        label='Search',
+    )
     virtual_machine_id = django_filters.ModelMultipleChoiceFilter(
         field_name='virtual_machine',
         queryset=VirtualMachine.objects.all(),
@@ -225,3 +220,10 @@ class InterfaceFilter(django_filters.FilterSet):
             return queryset.filter(mac_address=mac)
         except AddrFormatError:
             return queryset.none()
+
+    def search(self, queryset, name, value):
+        if not value.strip():
+            return queryset
+        return queryset.filter(
+            Q(name__icontains=value)
+        )

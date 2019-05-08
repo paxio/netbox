@@ -30,7 +30,7 @@ RIR_ACTIONS = """
     <i class="fa fa-history"></i>
 </a>
 {% if perms.ipam.change_rir %}
-    <a href="{% url 'ipam:rir_edit' slug=record.slug %}" class="btn btn-xs btn-warning"><i class="glyphicon glyphicon-pencil" aria-hidden="true"></i></a>
+    <a href="{% url 'ipam:rir_edit' slug=record.slug %}?return_url={{ request.path }}" class="btn btn-xs btn-warning"><i class="glyphicon glyphicon-pencil" aria-hidden="true"></i></a>
 {% endif %}
 """
 
@@ -52,7 +52,7 @@ ROLE_ACTIONS = """
     <i class="fa fa-history"></i>
 </a>
 {% if perms.ipam.change_role %}
-    <a href="{% url 'ipam:role_edit' slug=record.slug %}" class="btn btn-xs btn-warning"><i class="glyphicon glyphicon-pencil" aria-hidden="true"></i></a>
+    <a href="{% url 'ipam:role_edit' slug=record.slug %}?return_url={{ request.path }}" class="btn btn-xs btn-warning"><i class="glyphicon glyphicon-pencil" aria-hidden="true"></i></a>
 {% endif %}
 """
 
@@ -152,7 +152,7 @@ VLANGROUP_ACTIONS = """
     {% endif %}
 {% endwith %}
 {% if perms.ipam.change_vlangroup %}
-    <a href="{% url 'ipam:vlangroup_edit' pk=record.pk %}" class="btn btn-xs btn-warning"><i class="glyphicon glyphicon-pencil" aria-hidden="true"></i></a>
+    <a href="{% url 'ipam:vlangroup_edit' pk=record.pk %}?return_url={{ request.path }}" class="btn btn-xs btn-warning"><i class="glyphicon glyphicon-pencil" aria-hidden="true"></i></a>
 {% endif %}
 """
 
@@ -203,7 +203,7 @@ class RIRTable(BaseTable):
     name = tables.LinkColumn(verbose_name='Name')
     is_private = BooleanColumn(verbose_name='Private')
     aggregate_count = tables.Column(verbose_name='Aggregates')
-    actions = tables.TemplateColumn(template_code=RIR_ACTIONS, attrs={'td': {'class': 'text-right'}}, verbose_name='')
+    actions = tables.TemplateColumn(template_code=RIR_ACTIONS, attrs={'td': {'class': 'text-right noprint'}}, verbose_name='')
 
     class Meta(BaseTable.Meta):
         model = RIR
@@ -288,7 +288,7 @@ class RoleTable(BaseTable):
         orderable=False,
         verbose_name='VLANs'
     )
-    actions = tables.TemplateColumn(template_code=ROLE_ACTIONS, attrs={'td': {'class': 'text-right'}}, verbose_name='')
+    actions = tables.TemplateColumn(template_code=ROLE_ACTIONS, attrs={'td': {'class': 'text-right noprint'}}, verbose_name='')
 
     class Meta(BaseTable.Meta):
         model = Role
@@ -393,7 +393,7 @@ class VLANGroupTable(BaseTable):
     vlan_count = tables.Column(verbose_name='VLANs')
     outervid = tables.Column(verbose_name='Outer VLAN ID')
     slug = tables.Column(verbose_name='Slug')
-    actions = tables.TemplateColumn(template_code=VLANGROUP_ACTIONS, attrs={'td': {'class': 'text-right'}},
+    actions = tables.TemplateColumn(template_code=VLANGROUP_ACTIONS, attrs={'td': {'class': 'text-right noprint'}},
                                     verbose_name='')
 
     class Meta(BaseTable.Meta):
@@ -438,7 +438,7 @@ class VLANMemberTable(BaseTable):
     )
     actions = tables.TemplateColumn(
         template_code=VLAN_MEMBER_ACTIONS,
-        attrs={'td': {'class': 'text-right'}},
+        attrs={'td': {'class': 'text-right noprint'}},
         verbose_name=''
     )
 

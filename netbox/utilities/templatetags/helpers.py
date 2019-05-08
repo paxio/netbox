@@ -24,6 +24,7 @@ def oneline(value):
     """
     Replace each line break with a single space
     """
+    value = value.replace('\r', '')
     return value.replace('\n', ' ')
 
 
@@ -198,7 +199,7 @@ def querystring(request, **kwargs):
     querydict = request.GET.copy()
     for k, v in kwargs.items():
         if v is not None:
-            querydict[k] = v
+            querydict[k] = str(v)
         elif k in querydict:
             querydict.pop(k)
     querystring = querydict.urlencode(safe='/')

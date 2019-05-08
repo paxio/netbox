@@ -10,7 +10,7 @@ from taggit.models import Tag
 
 from extras import filters
 from extras.models import (
-    ConfigContext, CustomField, ExportTemplate, Graph, ImageAttachment, ObjectChange, ReportResult, TopologyMap,
+    ConfigContext, ExportTemplate, Graph, ImageAttachment, ObjectChange, ReportResult, TopologyMap,
 )
 from extras.reports import get_report, get_reports
 from utilities.api import FieldChoicesViewSet, IsAuthenticatedOrLoginNotRequired, ModelViewSet
@@ -23,8 +23,9 @@ from . import serializers
 
 class ExtrasFieldChoicesViewSet(FieldChoicesViewSet):
     fields = (
-        (CustomField, ['type']),
+        (ExportTemplate, ['template_language']),
         (Graph, ['type']),
+        (ObjectChange, ['action']),
     )
 
 
@@ -99,10 +100,9 @@ class TopologyMapViewSet(ModelViewSet):
 
         try:
             data = tmap.render(img_format=img_format)
-        except Exception:
+        except Exception as e:
             return HttpResponse(
-                "There was an error generating the requested graph. Ensure that the GraphViz executables have been "
-                "installed correctly."
+                "There was an error generating the requested graph: %s" % e
             )
 
         response = HttpResponse(data, content_type='image/{}'.format(img_format))
@@ -116,7 +116,9 @@ class TopologyMapViewSet(ModelViewSet):
 #
 
 class TagViewSet(ModelViewSet):
-    queryset = Tag.objects.annotate(tagged_items=Count('taggit_taggeditem_items'))
+    queryset = Tag.objects.annotate(
+        tagged_items=Count('taggit_taggeditem_items', distinct=True)
+    )
     serializer_class = serializers.TagSerializer
     filterset_class = filters.TagFilter
 

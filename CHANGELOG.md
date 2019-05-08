@@ -1,3 +1,200 @@
+2.5.12 (2019-05-01)
+
+## Bug Fixes
+
+* [#3127](https://github.com/digitalocean/netbox/issues/3127) - Fix natural ordering of device components
+
+---
+
+2.5.11 (2019-04-29)
+
+## Notes
+
+This release upgrades the Django framework to version 2.2.
+
+## Enhancements
+
+* [#2986](https://github.com/digitalocean/netbox/issues/2986) - Improve natural ordering of device components
+* [#3023](https://github.com/digitalocean/netbox/issues/3023) - Add support for filtering cables by connected device
+* [#3070](https://github.com/digitalocean/netbox/issues/3070) - Add decommissioning status for devices
+
+## Bug Fixes
+
+* [#2621](https://github.com/digitalocean/netbox/issues/2621) - Upgrade Django requirement to 2.2 to fix object deletion issue in the changelog middleware
+* [#3072](https://github.com/digitalocean/netbox/issues/3072) - Preserve multiselect filter values when updating per-page count for list views
+* [#3112](https://github.com/digitalocean/netbox/issues/3112) - Fix ordering of interface connections list by termination B name/device
+* [#3116](https://github.com/digitalocean/netbox/issues/3116) - Fix `tagged_items` count in tags API endpoint
+* [#3118](https://github.com/digitalocean/netbox/issues/3118) - Disable `last_login` update on login when maintenance mode is enabled
+
+---
+
+v2.5.10 (2019-04-08)
+
+## Enhancements
+
+* [#3052](https://github.com/digitalocean/netbox/issues/3052) - Add Jinja2 support for export templates
+
+## Bug Fixes
+
+* [#2937](https://github.com/digitalocean/netbox/issues/2937) - Redirect to list view after editing an object from list view
+* [#3036](https://github.com/digitalocean/netbox/issues/3036) - DCIM interfaces API endpoint should not include VM interfaces
+* [#3039](https://github.com/digitalocean/netbox/issues/3039) - Fix exception when retrieving change object for a component template via API
+* [#3041](https://github.com/digitalocean/netbox/issues/3041) - Fix form widget for bulk cable label update
+* [#3044](https://github.com/digitalocean/netbox/issues/3044) - Ignore site/rack fields when connecting a new cable via device search
+* [#3046](https://github.com/digitalocean/netbox/issues/3046) - Fix exception at reports API endpoint
+* [#3047](https://github.com/digitalocean/netbox/issues/3047) - Fix exception when writing mac address for an interface via API
+
+---
+
+v2.5.9 (2019-04-01)
+
+## Enhancements
+
+* [#2933](https://github.com/digitalocean/netbox/issues/2933) - Add username to outbound webhook requests
+* [#3011](https://github.com/digitalocean/netbox/issues/3011) - Add SSL support for django-rq (requires django-rq v1.3.1+)
+* [#3025](https://github.com/digitalocean/netbox/issues/3025) - Add request ID to outbound webhook requests (for correlating all changes part of a single request)
+
+## Bug Fixes
+
+* [#2207](https://github.com/digitalocean/netbox/issues/2207) - Fixes deterministic ordering of interfaces
+* [#2577](https://github.com/digitalocean/netbox/issues/2577) - Clarification of wording in API regarding filtering
+* [#2924](https://github.com/digitalocean/netbox/issues/2924) - Add interface type for QSFP28 50GE
+* [#2936](https://github.com/digitalocean/netbox/issues/2936) - Fix device role selection showing duplicate first entry
+* [#2998](https://github.com/digitalocean/netbox/issues/2998) - Limit device query to non-racked devices if no rack selected when creating a cable
+* [#3001](https://github.com/digitalocean/netbox/issues/3001) - Fix API representation of ObjectChange `action` and add `changed_object_type`
+* [#3014](https://github.com/digitalocean/netbox/issues/3014) - Fixes VM Role filtering
+* [#3019](https://github.com/digitalocean/netbox/issues/3019) - Fix tag population when running NetBox within a path
+* [#3022](https://github.com/digitalocean/netbox/issues/3022) - Add missing cable termination types to DCIM `_choices` endpoint
+* [#3026](https://github.com/digitalocean/netbox/issues/3026) - Tweak prefix/IP filter forms to filter using VRF ID rather than route distinguisher
+* [#3027](https://github.com/digitalocean/netbox/issues/3027) - Ignore empty local context data when rendering config contexts
+* [#3032](https://github.com/digitalocean/netbox/issues/3032) - Save assigned tags when creating a new secret
+
+---
+
+v2.5.8 (2019-03-11)
+
+## Enhancements
+
+* [#2435](https://github.com/digitalocean/netbox/issues/2435) - Printer friendly CSS
+
+## Bug Fixes
+
+* [#2065](https://github.com/digitalocean/netbox/issues/2065) - Correct documentation for VM interface serializer
+* [#2705](https://github.com/digitalocean/netbox/issues/2705) - Fix endpoint grouping in API docs
+* [#2781](https://github.com/digitalocean/netbox/issues/2781) - Fix filtering of sites/devices/VMs by multiple regions
+* [#2923](https://github.com/digitalocean/netbox/issues/2923) - Provider filter form's site field should be blank by default
+* [#2938](https://github.com/digitalocean/netbox/issues/2938) - Enforce deterministic ordering of device components returned by API
+* [#2939](https://github.com/digitalocean/netbox/issues/2939) - Exclude circuit terminations from API interface connections endpoint
+* [#2940](https://github.com/digitalocean/netbox/issues/2940) - Allow CSV import of prefixes/IPs to VRF without an RD assigned
+* [#2944](https://github.com/digitalocean/netbox/issues/2944) - Record the deletion of an IP address in the changelog of its parent interface (if any)
+* [#2952](https://github.com/digitalocean/netbox/issues/2952) - Added the `slug` field to the Tenant filter for use in the API and search function
+* [#2954](https://github.com/digitalocean/netbox/issues/2954) - Remove trailing slashes to fix root/template paths on Windows
+* [#2961](https://github.com/digitalocean/netbox/issues/2961) - Prevent exception when exporting inventory items belonging to unnamed devices
+* [#2962](https://github.com/digitalocean/netbox/issues/2962) - Increase ExportTemplate `mime_type` field length
+* [#2966](https://github.com/digitalocean/netbox/issues/2966) - Accept `null` cable length_unit via API
+* [#2972](https://github.com/digitalocean/netbox/issues/2972) - Improve ContentTypeField serializer to elegantly handle invalid data
+* [#2976](https://github.com/digitalocean/netbox/issues/2976) - Add delete button to tag view
+* [#2980](https://github.com/digitalocean/netbox/issues/2980) - Improve rendering time for API docs
+* [#2982](https://github.com/digitalocean/netbox/issues/2982) - Correct CSS class assignment on color picker
+* [#2984](https://github.com/digitalocean/netbox/issues/2984) - Fix logging of unlabeled cable ID on cable deletion
+* [#2985](https://github.com/digitalocean/netbox/issues/2985) - Fix pagination page length for rack elevations
+
+---
+
+v2.5.7 (2019-02-21)
+
+## Enhancements
+
+* [#2357](https://github.com/digitalocean/netbox/issues/2357) - Enable filtering of devices by rack face
+* [#2638](https://github.com/digitalocean/netbox/issues/2638) - Add button to copy unlocked secret to clipboard
+* [#2870](https://github.com/digitalocean/netbox/issues/2870) - Add Markdown rendering for provider NOC/admin contact fields
+* [#2878](https://github.com/digitalocean/netbox/issues/2878) - Add cable types for OS1/OS2 singlemode fiber
+* [#2890](https://github.com/digitalocean/netbox/issues/2890) - Add port types for APC fiber
+* [#2898](https://github.com/digitalocean/netbox/issues/2898) - Enable filtering cables list by connection status
+* [#2903](https://github.com/digitalocean/netbox/issues/2903) - Clarify purpose of tags field on interface edit form
+
+## Bug Fixes
+
+* [#2852](https://github.com/digitalocean/netbox/issues/2852) - Allow filtering devices by null rack position
+* [#2884](https://github.com/digitalocean/netbox/issues/2884) - Don't display connect button for wireless interfaces
+* [#2888](https://github.com/digitalocean/netbox/issues/2888) - Correct foreground color of device roles in rack elevations
+* [#2893](https://github.com/digitalocean/netbox/issues/2893) - Remove duplicate display of VRF RD on IP address view
+* [#2895](https://github.com/digitalocean/netbox/issues/2895) - Fix filtering of nullable character fields
+* [#2901](https://github.com/digitalocean/netbox/issues/2901) - Fix ordering regions by site count
+* [#2910](https://github.com/digitalocean/netbox/issues/2910) - Fix config context list and edit forms to use Select2 elements
+* [#2912](https://github.com/digitalocean/netbox/issues/2912) - Cable type in filter form should be blank by default
+* [#2913](https://github.com/digitalocean/netbox/issues/2913) - Fix assigned prefixes link on VRF view
+* [#2914](https://github.com/digitalocean/netbox/issues/2914) - Fix empty connected circuit link on device interfaces list
+* [#2915](https://github.com/digitalocean/netbox/issues/2915) - Fix bulk editing of pass-through ports
+
+---
+
+v2.5.6 (2019-02-13)
+
+## Enhancements
+
+* [#2758](https://github.com/digitalocean/netbox/issues/2758) - Add cable trace button to pass-through ports
+* [#2839](https://github.com/digitalocean/netbox/issues/2839) - Add "110 punch" type for pass-through ports
+* [#2854](https://github.com/digitalocean/netbox/issues/2854) - Enable bulk editing of pass-through ports
+* [#2866](https://github.com/digitalocean/netbox/issues/2866) - Add cellular interface types (GSM/CDMA/LTE)
+
+## Bug Fixes
+
+* [#2841](https://github.com/digitalocean/netbox/issues/2841) - Fix filtering by VRF for prefix and IP address lists
+* [#2844](https://github.com/digitalocean/netbox/issues/2844) - Correct display of far cable end for pass-through ports
+* [#2845](https://github.com/digitalocean/netbox/issues/2845) - Enable filtering of rack unit list by unit ID
+* [#2856](https://github.com/digitalocean/netbox/issues/2856) - Fix navigation links between LAG interfaces and their members on device view
+* [#2857](https://github.com/digitalocean/netbox/issues/2857) - Add `display_name` to DeviceType API serializer; fix DeviceType list for bulk device edit
+* [#2862](https://github.com/digitalocean/netbox/issues/2862) - Follow return URL when connecting a cable
+* [#2864](https://github.com/digitalocean/netbox/issues/2864) - Correct display of VRF name when no RD is assigned
+* [#2877](https://github.com/digitalocean/netbox/issues/2877) - Fixed device role label display on light background color
+* [#2880](https://github.com/digitalocean/netbox/issues/2880) - Sanitize user password if an exception is raised during login
+
+---
+
+v2.5.5 (2019-01-31)
+
+## Enhancements
+
+* [#2805](https://github.com/digitalocean/netbox/issues/2805) - Allow null route distinguisher for VRFs
+* [#2809](https://github.com/digitalocean/netbox/issues/2809) - Remove VRF child prefixes table; link to main prefixes view
+* [#2825](https://github.com/digitalocean/netbox/issues/2825) - Include directly connected device for front/rear ports
+
+## Bug Fixes
+
+* [#2824](https://github.com/digitalocean/netbox/issues/2824) - Fix template exception when viewing rack elevations list
+* [#2833](https://github.com/digitalocean/netbox/issues/2833) - Fix form widget for front port template creation
+* [#2835](https://github.com/digitalocean/netbox/issues/2835) - Fix certain model filters did not support the `q` query param
+* [#2837](https://github.com/digitalocean/netbox/issues/2837) - Fix select2 nullable filter fields add multiple null_option elements when paging
+
+---
+
+v2.5.4 (2019-01-29)
+
+## Enhancements
+
+* [#2516](https://github.com/digitalocean/netbox/issues/2516) - Implemented Select2 for all Model backed selection fields
+* [#2590](https://github.com/digitalocean/netbox/issues/2590) - Implemented the color picker with Select2 to show colors in the background
+* [#2733](https://github.com/digitalocean/netbox/issues/2733) - Enable bulk assignment of MAC addresses to interfaces
+* [#2735](https://github.com/digitalocean/netbox/issues/2735) - Implemented Select2 for all list filter form select elements
+* [#2753](https://github.com/digitalocean/netbox/issues/2753) - Implemented Select2 to replace most all instances of select fields in forms
+* [#2766](https://github.com/digitalocean/netbox/issues/2766) - Extend users admin table to include superuser and active fields
+* [#2782](https://github.com/digitalocean/netbox/issues/2782) - Add `is_pool` field for prefix filtering
+* [#2807](https://github.com/digitalocean/netbox/issues/2807) - Include device site/rack assignment in cable trace view
+* [#2808](https://github.com/digitalocean/netbox/issues/2808) - Loosen version pinning for Django to allow patch releases
+* [#2810](https://github.com/digitalocean/netbox/issues/2810) - Include description fields in interface connections export
+
+## Bug Fixes
+
+* [#2779](https://github.com/digitalocean/netbox/issues/2779) - Include "none" option when filter IP addresses by role
+* [#2783](https://github.com/digitalocean/netbox/issues/2783) - Fix AttributeError exception when attempting to delete region(s)
+* [#2795](https://github.com/digitalocean/netbox/issues/2795) - Fix duplicate display of pagination controls on child prefix/IP tables
+* [#2798](https://github.com/digitalocean/netbox/issues/2798) - Properly URL-encode "map it" link on site view
+* [#2802](https://github.com/digitalocean/netbox/issues/2802) - Better error handling for unsupported NAPALM methods
+* [#2816](https://github.com/digitalocean/netbox/issues/2816) - Handle exception when deleting a device with connected components
+
+---
+
 v2.5.3 (2019-01-11)
 
 ## Enhancements

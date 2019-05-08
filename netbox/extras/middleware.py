@@ -29,11 +29,15 @@ def cache_changed_object(instance, **kwargs):
 
 def _record_object_deleted(request, instance, **kwargs):
 
-    # Record that the object was deleted.
+    # Force resolution of request.user in case it's still a SimpleLazyObject. This seems to happen
+    # occasionally during tests, but haven't been able to determine why.
+    assert request.user.is_authenticated
+
+    # Record that the object was deleted
     if hasattr(instance, 'log_change'):
         instance.log_change(request.user, request.id, OBJECTCHANGE_ACTION_DELETE)
 
-    enqueue_webhooks(instance, OBJECTCHANGE_ACTION_DELETE)
+    enqueue_webhooks(instance, request.user, request.id, OBJECTCHANGE_ACTION_DELETE)
 
 
 class ObjectChangeMiddleware(object):
@@ -79,7 +83,7 @@ class ObjectChangeMiddleware(object):
                 obj.log_change(request.user, request.id, action)
 
             # Enqueue webhooks
-            enqueue_webhooks(obj, action)
+            enqueue_webhooks(obj, request.user, request.id, action)
 
         # Housekeeping: 1% chance of clearing out expired ObjectChanges
         if _thread_locals.changed_objects and settings.CHANGELOG_RETENTION and random.randint(1, 100) == 1:

@@ -5,7 +5,7 @@ from django.contrib.auth.models import User
 from django.contrib.contenttypes.models import ContentType
 from django.contrib.postgres.forms.array import SimpleArrayField
 from django.core.exceptions import ObjectDoesNotExist
-from django.db.models import Count, Q
+from django.db.models import Q
 from mptt.forms import TreeNodeChoiceField
 from taggit.forms import TagField
 from timezone_field import TimeZoneFormField
@@ -15,12 +15,11 @@ from ipam.models import IPAddress, VLAN, VLANGroup
 from tenancy.forms import TenancyForm
 from tenancy.models import Tenant
 from utilities.forms import (
-    AnnotatedMultipleChoiceField, APISelect, add_blank_choice, ArrayFieldSelectMultiple, BootstrapMixin, BulkEditForm,
-    BulkEditNullBooleanSelect, ChainedFieldsMixin, ChainedModelChoiceField, ColorSelect, CommentField, ComponentForm,
-    ConfirmationForm, ContentTypeSelect, CSVChoiceField, ExpandableNameField, FilterChoiceField,
-    FilterTreeNodeMultipleChoiceField, FlexibleModelChoiceField, JSONField, Livesearch, SelectWithPK, SmallTextarea,
-    SlugField, BOOLEAN_WITH_BLANK_CHOICES, COLOR_CHOICES,
-
+    APISelect, APISelectMultiple, add_blank_choice, ArrayFieldSelectMultiple, BootstrapMixin, BulkEditForm,
+    BulkEditNullBooleanSelect, ChainedFieldsMixin, ChainedModelChoiceField, ColorSelect, CommentField,
+    ComponentForm, ConfirmationForm, ContentTypeSelect, CSVChoiceField, ExpandableNameField,
+    FilterChoiceField, FlexibleModelChoiceField, JSONField, SelectWithPK, SmallTextarea, SlugField,
+    StaticSelect2, StaticSelect2Multiple, BOOLEAN_WITH_BLANK_CHOICES
 )
 from virtualization.models import Cluster, ClusterGroup
 from .constants import *
@@ -28,7 +27,7 @@ from .models import (
     Cable, DeviceBay, DeviceBayTemplate, ConsolePort, ConsolePortTemplate, ConsoleServerPort, ConsoleServerPortTemplate,
     Device, DeviceRole, DeviceType, FrontPort, FrontPortTemplate, Interface, InterfaceTemplate, Manufacturer,
     InventoryItem, Platform, PowerOutlet, PowerOutletTemplate, PowerPort, PowerPortTemplate, Rack, RackGroup,
-    RackReservation, RackRole, RearPort, RearPortTemplate, Region, Site, VirtualChassis,
+    RackReservation, RackRole, RearPort, RearPortTemplate, Region, Site, VirtualChassis
 )
 
 DEVICE_BY_PK_RE = r'{\d+\}'
@@ -89,6 +88,11 @@ class RegionForm(BootstrapMixin, forms.ModelForm):
         fields = [
             'parent', 'name', 'slug',
         ]
+        widgets = {
+            'parent': APISelect(
+                api_url="/api/dcim/regions/"
+            )
+        }
 
 
 class RegionCSVForm(forms.ModelForm):
@@ -126,7 +130,10 @@ class RegionFilterForm(BootstrapMixin, forms.Form):
 class SiteForm(BootstrapMixin, TenancyForm, CustomFieldForm):
     region = TreeNodeChoiceField(
         queryset=Region.objects.all(),
-        required=False
+        required=False,
+        widget=APISelect(
+            api_url="/api/dcim/regions/"
+        )
     )
     slug = SlugField()
     comments = CommentField()
@@ -152,6 +159,8 @@ class SiteForm(BootstrapMixin, TenancyForm, CustomFieldForm):
                     'rows': 3,
                 }
             ),
+            'status': StaticSelect2(),
+            'time_zone': StaticSelect2(),
         }
         help_texts = {
             'name': "Full name of the site",
@@ -209,15 +218,22 @@ class SiteBulkEditForm(BootstrapMixin, AddRemoveTagsForm, CustomFieldBulkEditFor
     status = forms.ChoiceField(
         choices=add_blank_choice(SITE_STATUS_CHOICES),
         required=False,
-        initial=''
+        initial='',
+        widget=StaticSelect2()
     )
     region = TreeNodeChoiceField(
         queryset=Region.objects.all(),
-        required=False
+        required=False,
+        widget=APISelect(
+            api_url="/api/dcim/regions/"
+        )
     )
     tenant = forms.ModelChoiceField(
         queryset=Tenant.objects.all(),
-        required=False
+        required=False,
+        widget=APISelect(
+            api_url="/api/tenancy/tenants",
+        )
     )
     asn = forms.IntegerField(
         min_value=1,
@@ -231,7 +247,8 @@ class SiteBulkEditForm(BootstrapMixin, AddRemoveTagsForm, CustomFieldBulkEditFor
     )
     time_zone = TimeZoneFormField(
         choices=add_blank_choice(TimeZoneFormField().choices),
-        required=False
+        required=False,
+        widget=StaticSelect2()
     )
 
     class Meta:
@@ -246,22 +263,29 @@ class SiteFilterForm(BootstrapMixin, CustomFieldFilterForm):
         required=False,
         label='Search'
     )
-    status = AnnotatedMultipleChoiceField(
+    status = forms.MultipleChoiceField(
         choices=SITE_STATUS_CHOICES,
-        annotate=Site.objects.all(),
-        annotate_field='status',
-        required=False
+        required=False,
+        widget=StaticSelect2Multiple()
     )
-    region = FilterTreeNodeMultipleChoiceField(
+    region = forms.ModelMultipleChoiceField(
         queryset=Region.objects.all(),
         to_field_name='slug',
         required=False,
-        count_attr='site_count'
+        widget=APISelectMultiple(
+            api_url="/api/dcim/regions/",
+            value_field="slug",
+        )
     )
     tenant = FilterChoiceField(
-        queryset=Tenant.objects.annotate(filter_count=Count('sites')),
+        queryset=Tenant.objects.all(),
         to_field_name='slug',
-        null_label='-- None --'
+        null_label='-- None --',
+        widget=APISelectMultiple(
+            api_url="/api/tenancy/tenants/",
+            value_field="slug",
+            null_option=True,
+        )
     )
 
 
@@ -277,6 +301,11 @@ class RackGroupForm(BootstrapMixin, forms.ModelForm):
         fields = [
             'site', 'name', 'slug',
         ]
+        widgets = {
+            'site': APISelect(
+                api_url="/api/dcim/sites/"
+            )
+        }
 
 
 class RackGroupCSVForm(forms.ModelForm):
@@ -300,10 +329,12 @@ class RackGroupCSVForm(forms.ModelForm):
 
 class RackGroupFilterForm(BootstrapMixin, forms.Form):
     site = FilterChoiceField(
-        queryset=Site.objects.annotate(
-            filter_count=Count('rack_groups')
-        ),
-        to_field_name='slug'
+        queryset=Site.objects.all(),
+        to_field_name='slug',
+        widget=APISelectMultiple(
+            api_url="/api/dcim/sites/",
+            value_field="slug",
+        )
     )
 
 
@@ -345,7 +376,7 @@ class RackForm(BootstrapMixin, TenancyForm, CustomFieldForm):
         ),
         required=False,
         widget=APISelect(
-            api_url='/api/dcim/rack-groups/?site_id={{site}}',
+            api_url='/api/dcim/rack-groups/',
         )
     )
     comments = CommentField()
@@ -366,11 +397,19 @@ class RackForm(BootstrapMixin, TenancyForm, CustomFieldForm):
             'u_height': "Height in rack units",
         }
         widgets = {
-            'site': forms.Select(
-                attrs={
-                    'filter-for': 'group',
+            'site': APISelect(
+                api_url="/api/dcim/sites/",
+                filter_for={
+                    'group': 'site_id',
                 }
             ),
+            'status': StaticSelect2(),
+            'role': APISelect(
+                api_url="/api/dcim/rack-roles/"
+            ),
+            'type': StaticSelect2(),
+            'width': StaticSelect2(),
+            'outer_unit': StaticSelect2(),
         }
 
 
@@ -472,24 +511,40 @@ class RackBulkEditForm(BootstrapMixin, AddRemoveTagsForm, CustomFieldBulkEditFor
     )
     site = forms.ModelChoiceField(
         queryset=Site.objects.all(),
-        required=False
+        required=False,
+        widget=APISelect(
+            api_url="/api/dcim/sites",
+            filter_for={
+                'group': 'site_id',
+            }
+        )
     )
     group = forms.ModelChoiceField(
         queryset=RackGroup.objects.all(),
-        required=False
+        required=False,
+        widget=APISelect(
+            api_url="/api/dcim/rack-groups",
+        )
     )
     tenant = forms.ModelChoiceField(
         queryset=Tenant.objects.all(),
-        required=False
+        required=False,
+        widget=APISelect(
+            api_url="/api/tenancy/tenants",
+        )
     )
     status = forms.ChoiceField(
         choices=add_blank_choice(RACK_STATUS_CHOICES),
         required=False,
-        initial=''
+        initial='',
+        widget=StaticSelect2()
     )
     role = forms.ModelChoiceField(
         queryset=RackRole.objects.all(),
-        required=False
+        required=False,
+        widget=APISelect(
+            api_url="/api/dcim/rack-roles",
+        )
     )
     serial = forms.CharField(
         max_length=50,
@@ -502,11 +557,13 @@ class RackBulkEditForm(BootstrapMixin, AddRemoveTagsForm, CustomFieldBulkEditFor
     )
     type = forms.ChoiceField(
         choices=add_blank_choice(RACK_TYPE_CHOICES),
-        required=False
+        required=False,
+        widget=StaticSelect2()
     )
     width = forms.ChoiceField(
         choices=add_blank_choice(RACK_WIDTH_CHOICES),
-        required=False
+        required=False,
+        widget=StaticSelect2()
     )
     u_height = forms.IntegerField(
         required=False,
@@ -527,7 +584,8 @@ class RackBulkEditForm(BootstrapMixin, AddRemoveTagsForm, CustomFieldBulkEditFor
     )
     outer_unit = forms.ChoiceField(
         choices=add_blank_choice(RACK_DIMENSION_UNIT_CHOICES),
-        required=False
+        required=False,
+        widget=StaticSelect2()
     )
     comments = CommentField(
         widget=SmallTextarea
@@ -546,39 +604,46 @@ class RackFilterForm(BootstrapMixin, CustomFieldFilterForm):
         label='Search'
     )
     site = FilterChoiceField(
-        queryset=Site.objects.annotate(
-            filter_count=Count('racks')
-        ),
-        to_field_name='slug'
+        queryset=Site.objects.all(),
+        to_field_name='slug',
+        widget=APISelectMultiple(
+            api_url="/api/dcim/sites/",
+            value_field="slug",
+        )
     )
     group_id = FilterChoiceField(
-        queryset=RackGroup.objects.select_related(
-            'site'
-        ).annotate(
-            filter_count=Count('racks')
-        ),
+        queryset=RackGroup.objects.select_related('site'),
         label='Rack group',
-        null_label='-- None --'
+        null_label='-- None --',
+        widget=APISelectMultiple(
+            api_url="/api/dcim/rack-groups/",
+            null_option=True,
+        )
     )
     tenant = FilterChoiceField(
-        queryset=Tenant.objects.annotate(
-            filter_count=Count('racks')
-        ),
+        queryset=Tenant.objects.all(),
         to_field_name='slug',
-        null_label='-- None --'
+        null_label='-- None --',
+        widget=APISelectMultiple(
+            api_url="/api/tenancy/tenants/",
+            value_field="slug",
+            null_option=True,
+        )
     )
-    status = AnnotatedMultipleChoiceField(
+    status = forms.MultipleChoiceField(
         choices=RACK_STATUS_CHOICES,
-        annotate=Rack.objects.all(),
-        annotate_field='status',
-        required=False
+        required=False,
+        widget=StaticSelect2Multiple()
     )
     role = FilterChoiceField(
-        queryset=RackRole.objects.annotate(
-            filter_count=Count('racks')
-        ),
+        queryset=RackRole.objects.all(),
         to_field_name='slug',
-        null_label='-- None --'
+        null_label='-- None --',
+        widget=APISelectMultiple(
+            api_url="/api/dcim/rack-roles/",
+            value_field="slug",
+            null_option=True,
+        )
     )
 
 
@@ -598,7 +663,8 @@ class RackReservationForm(BootstrapMixin, TenancyForm, forms.ModelForm):
     user = forms.ModelChoiceField(
         queryset=User.objects.order_by(
             'username'
-        )
+        ),
+        widget=StaticSelect2()
     )
 
     class Meta:
@@ -630,26 +696,31 @@ class RackReservationFilterForm(BootstrapMixin, forms.Form):
         label='Search'
     )
     site = FilterChoiceField(
-        queryset=Site.objects.annotate(
-            filter_count=Count('racks__reservations')
-        ),
-        to_field_name='slug'
+        queryset=Site.objects.all(),
+        to_field_name='slug',
+        widget=APISelectMultiple(
+            api_url="/api/dcim/sites/",
+            value_field="slug",
+        )
     )
     group_id = FilterChoiceField(
-        queryset=RackGroup.objects.select_related(
-            'site'
-        ).annotate(
-            filter_count=Count('racks__reservations')
-        ),
+        queryset=RackGroup.objects.select_related('site'),
         label='Rack group',
-        null_label='-- None --'
+        null_label='-- None --',
+        widget=APISelectMultiple(
+            api_url="/api/dcim/rack-groups/",
+            null_option=True,
+        )
     )
     tenant = FilterChoiceField(
-        queryset=Tenant.objects.annotate(
-            filter_count=Count('rackreservations')
-        ),
+        queryset=Tenant.objects.all(),
         to_field_name='slug',
-        null_label='-- None --'
+        null_label='-- None --',
+        widget=APISelectMultiple(
+            api_url="/api/tenancy/tenants/",
+            value_field="slug",
+            null_option=True,
+        )
     )
 
 
@@ -662,11 +733,15 @@ class RackReservationBulkEditForm(BootstrapMixin, BulkEditForm):
         queryset=User.objects.order_by(
             'username'
         ),
-        required=False
+        required=False,
+        widget=StaticSelect2()
     )
     tenant = forms.ModelChoiceField(
         queryset=Tenant.objects.all(),
-        required=False
+        required=False,
+        widget=APISelect(
+            api_url="/api/tenancy/tenant",
+        )
     )
     description = forms.CharField(
         max_length=100,
@@ -720,6 +795,12 @@ class DeviceTypeForm(BootstrapMixin, CustomFieldForm):
             'manufacturer', 'model', 'slug', 'part_number', 'u_height', 'is_full_depth', 'subdevice_role', 'comments',
             'tags',
         ]
+        widgets = {
+            'manufacturer': APISelect(
+                api_url="/api/dcim/manufacturers/"
+            ),
+            'subdevice_role': StaticSelect2()
+        }
 
 
 class DeviceTypeCSVForm(forms.ModelForm):
@@ -754,7 +835,10 @@ class DeviceTypeBulkEditForm(BootstrapMixin, AddRemoveTagsForm, CustomFieldBulkE
     )
     manufacturer = forms.ModelChoiceField(
         queryset=Manufacturer.objects.all(),
-        required=False
+        required=False,
+        widget=APISelect(
+            api_url="/api/dcim/manufactureres"
+        )
     )
     u_height = forms.IntegerField(
         min_value=1,
@@ -777,57 +861,59 @@ class DeviceTypeFilterForm(BootstrapMixin, CustomFieldFilterForm):
         label='Search'
     )
     manufacturer = FilterChoiceField(
-        queryset=Manufacturer.objects.annotate(
-            filter_count=Count('device_types')
-        ),
-        to_field_name='slug'
+        queryset=Manufacturer.objects.all(),
+        to_field_name='slug',
+        widget=APISelectMultiple(
+            api_url="/api/dcim/manufacturers/",
+            value_field="slug",
+        )
     )
     subdevice_role = forms.NullBooleanField(
         required=False,
         label='Subdevice role',
-        widget=forms.Select(
+        widget=StaticSelect2(
             choices=add_blank_choice(SUBDEVICE_ROLE_CHOICES)
         )
     )
     console_ports = forms.NullBooleanField(
         required=False,
         label='Has console ports',
-        widget=forms.Select(
+        widget=StaticSelect2(
             choices=BOOLEAN_WITH_BLANK_CHOICES
         )
     )
     console_server_ports = forms.NullBooleanField(
         required=False,
         label='Has console server ports',
-        widget=forms.Select(
+        widget=StaticSelect2(
             choices=BOOLEAN_WITH_BLANK_CHOICES
         )
     )
     power_ports = forms.NullBooleanField(
         required=False,
         label='Has power ports',
-        widget=forms.Select(
+        widget=StaticSelect2(
             choices=BOOLEAN_WITH_BLANK_CHOICES
         )
     )
     power_outlets = forms.NullBooleanField(
         required=False,
         label='Has power outlets',
-        widget=forms.Select(
+        widget=StaticSelect2(
             choices=BOOLEAN_WITH_BLANK_CHOICES
         )
     )
     interfaces = forms.NullBooleanField(
         required=False,
         label='Has interfaces',
-        widget=forms.Select(
+        widget=StaticSelect2(
             choices=BOOLEAN_WITH_BLANK_CHOICES
         )
     )
     pass_through_ports = forms.NullBooleanField(
         required=False,
         label='Has pass-through ports',
-        widget=forms.Select(
+        widget=StaticSelect2(
             choices=BOOLEAN_WITH_BLANK_CHOICES
         )
     )
@@ -918,6 +1004,7 @@ class InterfaceTemplateForm(BootstrapMixin, forms.ModelForm):
         ]
         widgets = {
             'device_type': forms.HiddenInput(),
+            'form_factor': StaticSelect2(),
         }
 
 
@@ -926,7 +1013,8 @@ class InterfaceTemplateCreateForm(ComponentForm):
         label='Name'
     )
     form_factor = forms.ChoiceField(
-        choices=IFACE_FF_CHOICES
+        choices=IFACE_FF_CHOICES,
+        widget=StaticSelect2()
     )
     mgmt_only = forms.BooleanField(
         required=False,
@@ -941,7 +1029,8 @@ class InterfaceTemplateBulkEditForm(BootstrapMixin, BulkEditForm):
     )
     form_factor = forms.ChoiceField(
         choices=add_blank_choice(IFACE_FF_CHOICES),
-        required=False
+        required=False,
+        widget=StaticSelect2()
     )
     mgmt_only = forms.NullBooleanField(
         required=False,
@@ -962,6 +1051,7 @@ class FrontPortTemplateForm(BootstrapMixin, forms.ModelForm):
         ]
         widgets = {
             'device_type': forms.HiddenInput(),
+            'rear_port': StaticSelect2(),
         }
 
 
@@ -970,12 +1060,13 @@ class FrontPortTemplateCreateForm(ComponentForm):
         label='Name'
     )
     type = forms.ChoiceField(
-        choices=PORT_TYPE_CHOICES
+        choices=PORT_TYPE_CHOICES,
+        widget=StaticSelect2()
     )
     rear_port_set = forms.MultipleChoiceField(
         choices=[],
         label='Rear ports',
-        help_text='Select one rear port assignment for each front port being created.'
+        help_text='Select one rear port assignment for each front port being created.',
     )
 
     def __init__(self, *args, **kwargs):
@@ -1030,6 +1121,7 @@ class RearPortTemplateForm(BootstrapMixin, forms.ModelForm):
         ]
         widgets = {
             'device_type': forms.HiddenInput(),
+            'type': StaticSelect2(),
         }
 
 
@@ -1038,7 +1130,8 @@ class RearPortTemplateCreateForm(ComponentForm):
         label='Name'
     )
     type = forms.ChoiceField(
-        choices=PORT_TYPE_CHOICES
+        choices=PORT_TYPE_CHOICES,
+        widget=StaticSelect2(),
     )
     positions = forms.IntegerField(
         min_value=1,
@@ -1105,6 +1198,9 @@ class PlatformForm(BootstrapMixin, forms.ModelForm):
             'name', 'slug', 'manufacturer', 'napalm_driver', 'napalm_args',
         ]
         widgets = {
+            'manufacturer': APISelect(
+                api_url="/api/dcim/manufacturers/"
+            ),
             'napalm_args': SmallTextarea(),
         }
 
@@ -1136,9 +1232,10 @@ class PlatformCSVForm(forms.ModelForm):
 class DeviceForm(BootstrapMixin, TenancyForm, CustomFieldForm):
     site = forms.ModelChoiceField(
         queryset=Site.objects.all(),
-        widget=forms.Select(
-            attrs={
-                'filter-for': 'rack',
+        widget=APISelect(
+            api_url="/api/dcim/sites/",
+            filter_for={
+                'rack': 'site_id'
             }
         )
     )
@@ -1149,11 +1246,8 @@ class DeviceForm(BootstrapMixin, TenancyForm, CustomFieldForm):
         ),
         required=False,
         widget=APISelect(
-            api_url='/api/dcim/racks/?site_id={{site}}',
+            api_url='/api/dcim/racks/',
             display_field='display_name',
-            attrs={
-                'filter-for': 'position',
-            }
         )
     )
     position = forms.TypedChoiceField(
@@ -1161,15 +1255,16 @@ class DeviceForm(BootstrapMixin, TenancyForm, CustomFieldForm):
         empty_value=None,
         help_text="The lowest-numbered unit occupied by the device",
         widget=APISelect(
-            api_url='/api/dcim/racks/{{rack}}/units/?face={{face}}',
+            api_url='/api/dcim/racks/{{rack}}/units/',
             disabled_indicator='device'
         )
     )
     manufacturer = forms.ModelChoiceField(
         queryset=Manufacturer.objects.all(),
-        widget=forms.Select(
-            attrs={
-                'filter-for': 'device_type',
+        widget=APISelect(
+            api_url="/api/dcim/manufacturers/",
+            filter_for={
+                'device_type': 'manufacturer_id'
             }
         )
     )
@@ -1180,15 +1275,21 @@ class DeviceForm(BootstrapMixin, TenancyForm, CustomFieldForm):
         ),
         label='Device type',
         widget=APISelect(
-            api_url='/api/dcim/device-types/?manufacturer_id={{manufacturer}}',
+            api_url='/api/dcim/device-types/',
             display_field='model'
         )
     )
     cluster_group = forms.ModelChoiceField(
         queryset=ClusterGroup.objects.all(),
         required=False,
-        widget=forms.Select(
-            attrs={'filter-for': 'cluster', 'nullable': 'true'}
+        widget=APISelect(
+            api_url="/api/virtualization/cluster-groups/",
+            filter_for={
+                'cluster': 'group_id'
+            },
+            attrs={
+                'nullable': 'true'
+            }
         )
     )
     cluster = ChainedModelChoiceField(
@@ -1198,7 +1299,7 @@ class DeviceForm(BootstrapMixin, TenancyForm, CustomFieldForm):
         ),
         required=False,
         widget=APISelect(
-            api_url='/api/virtualization/clusters/?group_id={{cluster_group}}',
+            api_url='/api/virtualization/clusters/',
         )
     )
     comments = CommentField()
@@ -1219,11 +1320,20 @@ class DeviceForm(BootstrapMixin, TenancyForm, CustomFieldForm):
                                   "config context",
         }
         widgets = {
-            'face': forms.Select(
-                attrs={
-                    'filter-for': 'position',
+            'face': StaticSelect2(
+                filter_for={
+                    'position': 'face'
                 }
             ),
+            'device_role': APISelect(
+                api_url='/api/dcim/device-roles/'
+            ),
+            'status': StaticSelect2(),
+            'platform': APISelect(
+                api_url="/api/dcim/platforms/"
+            ),
+            'primary_ip4': StaticSelect2(),
+            'primary_ip6': StaticSelect2(),
         }
 
     def __init__(self, *args, **kwargs):
@@ -1267,7 +1377,7 @@ class DeviceForm(BootstrapMixin, TenancyForm, CustomFieldForm):
 
             # If editing an existing device, exclude it from the list of occupied rack units. This ensures that a device
             # can be flipped from one face to another.
-            self.fields['position'].widget.attrs['api-url'] += '&exclude={}'.format(self.instance.pk)
+            self.fields['position'].widget.add_additional_query_param('exclude', self.instance.pk)
 
             # Limit platform by manufacturer
             self.fields['platform'].queryset = Platform.objects.filter(
@@ -1488,25 +1598,39 @@ class DeviceBulkEditForm(BootstrapMixin, AddRemoveTagsForm, CustomFieldBulkEditF
     device_type = forms.ModelChoiceField(
         queryset=DeviceType.objects.all(),
         required=False,
-        label='Type'
+        label='Type',
+        widget=APISelect(
+            api_url="/api/dcim/device-types/",
+            display_field='display_name'
+        )
     )
     device_role = forms.ModelChoiceField(
         queryset=DeviceRole.objects.all(),
         required=False,
-        label='Role'
+        label='Role',
+        widget=APISelect(
+            api_url="/api/dcim/device-roles/"
+        )
     )
     tenant = forms.ModelChoiceField(
         queryset=Tenant.objects.all(),
-        required=False
+        required=False,
+        widget=APISelect(
+            api_url="/api/tenancy/tenants/"
+        )
     )
     platform = forms.ModelChoiceField(
         queryset=Platform.objects.all(),
-        required=False
+        required=False,
+        widget=APISelect(
+            api_url="/api/dcim/platforms/"
+        )
     )
     status = forms.ChoiceField(
         choices=add_blank_choice(DEVICE_STATUS_CHOICES),
         required=False,
-        initial=''
+        initial='',
+        widget=StaticSelect2()
     )
     serial = forms.CharField(
         max_length=50,
@@ -1526,71 +1650,103 @@ class DeviceFilterForm(BootstrapMixin, CustomFieldFilterForm):
         required=False,
         label='Search'
     )
-    region = FilterTreeNodeMultipleChoiceField(
+    region = FilterChoiceField(
         queryset=Region.objects.all(),
         to_field_name='slug',
         required=False,
+        widget=APISelectMultiple(
+            api_url="/api/dcim/regions/",
+            value_field="slug",
+            filter_for={
+                'site': 'region'
+            }
+        )
     )
     site = FilterChoiceField(
-        queryset=Site.objects.annotate(
-            filter_count=Count('devices')
-        ),
+        queryset=Site.objects.all(),
         to_field_name='slug',
+        widget=APISelectMultiple(
+            api_url="/api/dcim/sites/",
+            value_field="slug",
+            filter_for={
+                'rack_group_id': 'site',
+                'rack_id': 'site',
+            }
+        )
     )
     rack_group_id = FilterChoiceField(
         queryset=RackGroup.objects.select_related(
             'site'
-        ).annotate(
-            filter_count=Count('racks__devices')
         ),
         label='Rack group',
+        widget=APISelectMultiple(
+            api_url="/api/dcim/rack-groups/",
+            filter_for={
+                'rack_id': 'rack_group_id',
+            }
+        )
     )
     rack_id = FilterChoiceField(
-        queryset=Rack.objects.annotate(
-            filter_count=Count('devices')
-        ),
+        queryset=Rack.objects.all(),
         label='Rack',
         null_label='-- None --',
+        widget=APISelectMultiple(
+            api_url="/api/dcim/racks/",
+            null_option=True,
+        )
     )
     role = FilterChoiceField(
-        queryset=DeviceRole.objects.annotate(
-            filter_count=Count('devices')
-        ),
+        queryset=DeviceRole.objects.all(),
         to_field_name='slug',
+        widget=APISelectMultiple(
+            api_url="/api/dcim/device-roles/",
+            value_field="slug",
+        )
     )
     tenant = FilterChoiceField(
-        queryset=Tenant.objects.annotate(
-            filter_count=Count('devices')
-        ),
+        queryset=Tenant.objects.all(),
         to_field_name='slug',
         null_label='-- None --',
+        widget=APISelectMultiple(
+            api_url="/api/tenancy/tenants/",
+            value_field="slug",
+            null_option=True,
+        )
     )
     manufacturer_id = FilterChoiceField(
         queryset=Manufacturer.objects.all(),
-        label='Manufacturer'
+        label='Manufacturer',
+        widget=APISelectMultiple(
+            api_url="/api/dcim/manufacturers/",
+            filter_for={
+                'device_type_id': 'manufacturer_id',
+            }
+        )
     )
     device_type_id = FilterChoiceField(
         queryset=DeviceType.objects.select_related(
             'manufacturer'
-        ).order_by(
-            'model'
-        ).annotate(
-            filter_count=Count('instances'),
         ),
         label='Model',
+        widget=APISelectMultiple(
+            api_url="/api/dcim/device-types/",
+            display_field="model",
+        )
     )
     platform = FilterChoiceField(
-        queryset=Platform.objects.annotate(
-            filter_count=Count('devices')
-        ),
+        queryset=Platform.objects.all(),
         to_field_name='slug',
         null_label='-- None --',
+        widget=APISelectMultiple(
+            api_url="/api/dcim/platforms/",
+            value_field="slug",
+            null_option=True,
+        )
     )
-    status = AnnotatedMultipleChoiceField(
+    status = forms.MultipleChoiceField(
         choices=DEVICE_STATUS_CHOICES,
-        annotate=Device.objects.all(),
-        annotate_field='status',
-        required=False
+        required=False,
+        widget=StaticSelect2Multiple()
     )
     mac_address = forms.CharField(
         required=False,
@@ -1599,49 +1755,49 @@ class DeviceFilterForm(BootstrapMixin, CustomFieldFilterForm):
     has_primary_ip = forms.NullBooleanField(
         required=False,
         label='Has a primary IP',
-        widget=forms.Select(
+        widget=StaticSelect2(
             choices=BOOLEAN_WITH_BLANK_CHOICES
         )
     )
     console_ports = forms.NullBooleanField(
         required=False,
         label='Has console ports',
-        widget=forms.Select(
+        widget=StaticSelect2(
             choices=BOOLEAN_WITH_BLANK_CHOICES
         )
     )
     console_server_ports = forms.NullBooleanField(
         required=False,
         label='Has console server ports',
-        widget=forms.Select(
+        widget=StaticSelect2(
             choices=BOOLEAN_WITH_BLANK_CHOICES
         )
     )
     power_ports = forms.NullBooleanField(
         required=False,
         label='Has power ports',
-        widget=forms.Select(
+        widget=StaticSelect2(
             choices=BOOLEAN_WITH_BLANK_CHOICES
         )
     )
     power_outlets = forms.NullBooleanField(
         required=False,
         label='Has power outlets',
-        widget=forms.Select(
+        widget=StaticSelect2(
             choices=BOOLEAN_WITH_BLANK_CHOICES
         )
     )
     interfaces = forms.NullBooleanField(
         required=False,
         label='Has interfaces',
-        widget=forms.Select(
+        widget=StaticSelect2(
             choices=BOOLEAN_WITH_BLANK_CHOICES
         )
     )
     pass_through_ports = forms.NullBooleanField(
         required=False,
         label='Has pass-through ports',
-        widget=forms.Select(
+        widget=StaticSelect2(
             choices=BOOLEAN_WITH_BLANK_CHOICES
         )
     )
@@ -1663,7 +1819,8 @@ class DeviceBulkAddComponentForm(BootstrapMixin, forms.Form):
 
 class DeviceBulkAddInterfaceForm(DeviceBulkAddComponentForm):
     form_factor = forms.ChoiceField(
-        choices=IFACE_FF_CHOICES
+        choices=IFACE_FF_CHOICES,
+        widget=StaticSelect2()
     )
     enabled = forms.BooleanField(
         required=False,
@@ -1842,6 +1999,9 @@ class InterfaceForm(BootstrapMixin, forms.ModelForm):
         ]
         widgets = {
             'device': forms.HiddenInput(),
+            'form_factor': StaticSelect2(),
+            'lag': StaticSelect2(),
+            'mode': StaticSelect2(),
         }
         labels = {
             'mode': '802.1Q Mode',
@@ -1887,7 +2047,7 @@ class InterfaceAssignVLANsForm(BootstrapMixin, forms.ModelForm):
     vlans = forms.MultipleChoiceField(
         choices=[],
         label='VLANs',
-        widget=forms.SelectMultiple(
+        widget=StaticSelect2Multiple(
             attrs={
                 'size': 20,
             }
@@ -1975,7 +2135,8 @@ class InterfaceCreateForm(ComponentForm, forms.Form):
         label='Name'
     )
     form_factor = forms.ChoiceField(
-        choices=IFACE_FF_CHOICES
+        choices=IFACE_FF_CHOICES,
+        widget=StaticSelect2(),
     )
     enabled = forms.BooleanField(
         required=False
@@ -1983,7 +2144,8 @@ class InterfaceCreateForm(ComponentForm, forms.Form):
     lag = forms.ModelChoiceField(
         queryset=Interface.objects.all(),
         required=False,
-        label='Parent LAG'
+        label='Parent LAG',
+        widget=StaticSelect2(),
     )
     mtu = forms.IntegerField(
         required=False,
@@ -2006,7 +2168,8 @@ class InterfaceCreateForm(ComponentForm, forms.Form):
     )
     mode = forms.ChoiceField(
         choices=add_blank_choice(IFACE_MODE_CHOICES),
-        required=False
+        required=False,
+        widget=StaticSelect2(),
     )
     tags = TagField(
         required=False
@@ -2036,7 +2199,8 @@ class InterfaceBulkEditForm(BootstrapMixin, AddRemoveTagsForm, BulkEditForm):
     )
     form_factor = forms.ChoiceField(
         choices=add_blank_choice(IFACE_FF_CHOICES),
-        required=False
+        required=False,
+        widget=StaticSelect2()
     )
     enabled = forms.NullBooleanField(
         required=False,
@@ -2045,7 +2209,12 @@ class InterfaceBulkEditForm(BootstrapMixin, AddRemoveTagsForm, BulkEditForm):
     lag = forms.ModelChoiceField(
         queryset=Interface.objects.all(),
         required=False,
-        label='Parent LAG'
+        label='Parent LAG',
+        widget=StaticSelect2()
+    )
+    mac_address = forms.CharField(
+        required=False,
+        label='MAC Address'
     )
     mtu = forms.IntegerField(
         required=False,
@@ -2064,12 +2233,13 @@ class InterfaceBulkEditForm(BootstrapMixin, AddRemoveTagsForm, BulkEditForm):
     )
     mode = forms.ChoiceField(
         choices=add_blank_choice(IFACE_MODE_CHOICES),
-        required=False
+        required=False,
+        widget=StaticSelect2()
     )
 
     class Meta:
         nullable_fields = [
-            'lag', 'mtu', 'description', 'mode',
+            'lag', 'mac_address', 'mtu', 'description', 'mode',
         ]
 
     def __init__(self, *args, **kwargs):
@@ -2116,6 +2286,8 @@ class FrontPortForm(BootstrapMixin, forms.ModelForm):
         ]
         widgets = {
             'device': forms.HiddenInput(),
+            'type': StaticSelect2(),
+            'rear_port': StaticSelect2(),
         }
 
     def __init__(self, *args, **kwargs):
@@ -2134,12 +2306,13 @@ class FrontPortCreateForm(ComponentForm):
         label='Name'
     )
     type = forms.ChoiceField(
-        choices=PORT_TYPE_CHOICES
+        choices=PORT_TYPE_CHOICES,
+        widget=StaticSelect2(),
     )
     rear_port_set = forms.MultipleChoiceField(
         choices=[],
         label='Rear ports',
-        help_text='Select one rear port assignment for each front port being created.'
+        help_text='Select one rear port assignment for each front port being created.',
     )
     description = forms.CharField(
         required=False
@@ -2187,6 +2360,27 @@ class FrontPortCreateForm(ComponentForm):
         }
 
 
+class FrontPortBulkEditForm(BootstrapMixin, AddRemoveTagsForm, BulkEditForm):
+    pk = forms.ModelMultipleChoiceField(
+        queryset=FrontPort.objects.all(),
+        widget=forms.MultipleHiddenInput()
+    )
+    type = forms.ChoiceField(
+        choices=add_blank_choice(PORT_TYPE_CHOICES),
+        required=False,
+        widget=StaticSelect2()
+    )
+    description = forms.CharField(
+        max_length=100,
+        required=False
+    )
+
+    class Meta:
+        nullable_fields = [
+            'description',
+        ]
+
+
 class FrontPortBulkRenameForm(BulkRenameForm):
     pk = forms.ModelMultipleChoiceField(
         queryset=FrontPort.objects.all(),
@@ -2217,6 +2411,7 @@ class RearPortForm(BootstrapMixin, forms.ModelForm):
         ]
         widgets = {
             'device': forms.HiddenInput(),
+            'type': StaticSelect2(),
         }
 
 
@@ -2225,7 +2420,8 @@ class RearPortCreateForm(ComponentForm):
         label='Name'
     )
     type = forms.ChoiceField(
-        choices=PORT_TYPE_CHOICES
+        choices=PORT_TYPE_CHOICES,
+        widget=StaticSelect2(),
     )
     positions = forms.IntegerField(
         min_value=1,
@@ -2236,6 +2432,27 @@ class RearPortCreateForm(ComponentForm):
     description = forms.CharField(
         required=False
     )
+
+
+class RearPortBulkEditForm(BootstrapMixin, AddRemoveTagsForm, BulkEditForm):
+    pk = forms.ModelMultipleChoiceField(
+        queryset=RearPort.objects.all(),
+        widget=forms.MultipleHiddenInput()
+    )
+    type = forms.ChoiceField(
+        choices=add_blank_choice(PORT_TYPE_CHOICES),
+        required=False,
+        widget=StaticSelect2()
+    )
+    description = forms.CharField(
+        max_length=100,
+        required=False
+    )
+
+    class Meta:
+        nullable_fields = [
+            'description',
+        ]
 
 
 class RearPortBulkRenameForm(BulkRenameForm):
@@ -2261,9 +2478,11 @@ class CableCreateForm(BootstrapMixin, ChainedFieldsMixin, forms.ModelForm):
         queryset=Site.objects.all(),
         label='Site',
         required=False,
-        widget=forms.Select(
-            attrs={
-                'filter-for': 'termination_b_rack',
+        widget=APISelect(
+            api_url='/api/dcim/sites/',
+            filter_for={
+                'termination_b_rack': 'site_id',
+                'termination_b_device': 'site_id',
             }
         )
     )
@@ -2275,9 +2494,11 @@ class CableCreateForm(BootstrapMixin, ChainedFieldsMixin, forms.ModelForm):
         label='Rack',
         required=False,
         widget=APISelect(
-            api_url='/api/dcim/racks/?site_id={{termination_b_site}}',
+            api_url='/api/dcim/racks/',
+            filter_for={
+                'termination_b_device': 'rack_id',
+            },
             attrs={
-                'filter-for': 'termination_b_device',
                 'nullable': 'true',
             }
         )
@@ -2291,38 +2512,25 @@ class CableCreateForm(BootstrapMixin, ChainedFieldsMixin, forms.ModelForm):
         label='Device',
         required=False,
         widget=APISelect(
-            api_url='/api/dcim/devices/?site_id={{termination_b_site}}&rack_id={{termination_b_rack}}',
+            api_url='/api/dcim/devices/',
             display_field='display_name',
-            attrs={
-                'filter-for': 'termination_b_id',
+            filter_for={
+                'termination_b_id': 'device_id',
             }
-        )
-    )
-    livesearch = forms.CharField(
-        required=False,
-        label='Device',
-        widget=Livesearch(
-            query_key='q',
-            query_url='dcim-api:device-list',
-            field_to_update='termination_b_device'
         )
     )
     termination_b_type = forms.ModelChoiceField(
         queryset=ContentType.objects.all(),
         label='Type',
-        widget=ContentTypeSelect(
-            attrs={
-                'filter-for': 'termination_b_id',
-            }
-        )
+        widget=ContentTypeSelect()
     )
     termination_b_id = forms.IntegerField(
         label='Name',
         widget=APISelect(
-            api_url='/api/dcim/{{termination_b_type}}s/?device_id={{termination_b_device}}',
+            api_url='/api/dcim/{{termination_b_type}}s/',
             disabled_indicator='cable',
-            url_conditional_append={
-                'termination_b_type__interface': '&type=physical',
+            conditional_query_params={
+                'termination_b_type__interface': 'type=physical',
             }
         )
     )
@@ -2330,7 +2538,7 @@ class CableCreateForm(BootstrapMixin, ChainedFieldsMixin, forms.ModelForm):
     class Meta:
         model = Cable
         fields = [
-            'termination_b_site', 'termination_b_rack', 'termination_b_device', 'livesearch', 'termination_b_type',
+            'termination_b_site', 'termination_b_rack', 'termination_b_device', 'termination_b_type',
             'termination_b_id', 'type', 'status', 'label', 'color', 'length', 'length_unit',
         ]
 
@@ -2493,11 +2701,13 @@ class CableBulkEditForm(BootstrapMixin, BulkEditForm):
     type = forms.ChoiceField(
         choices=add_blank_choice(CABLE_TYPE_CHOICES),
         required=False,
-        initial=''
+        initial='',
+        widget=StaticSelect2()
     )
     status = forms.ChoiceField(
         choices=add_blank_choice(CONNECTION_STATUS_CHOICES),
         required=False,
+        widget=StaticSelect2(),
         initial=''
     )
     label = forms.CharField(
@@ -2516,7 +2726,8 @@ class CableBulkEditForm(BootstrapMixin, BulkEditForm):
     length_unit = forms.ChoiceField(
         choices=add_blank_choice(CABLE_LENGTH_UNIT_CHOICES),
         required=False,
-        initial=''
+        initial='',
+        widget=StaticSelect2()
     )
 
     class Meta:
@@ -2541,17 +2752,24 @@ class CableFilterForm(BootstrapMixin, forms.Form):
         required=False,
         label='Search'
     )
-    type = AnnotatedMultipleChoiceField(
-        choices=CABLE_TYPE_CHOICES,
-        annotate=Cable.objects.all(),
-        annotate_field='type',
-        required=False
+    type = forms.MultipleChoiceField(
+        choices=add_blank_choice(CABLE_TYPE_CHOICES),
+        required=False,
+        widget=StaticSelect2()
     )
-    color = AnnotatedMultipleChoiceField(
-        choices=COLOR_CHOICES,
-        annotate=Cable.objects.all(),
-        annotate_field='color',
-        required=False
+    status = forms.ChoiceField(
+        required=False,
+        choices=add_blank_choice(CONNECTION_STATUS_CHOICES),
+        widget=StaticSelect2()
+    )
+    color = forms.CharField(
+        max_length=6,
+        required=False,
+        widget=ColorSelect()
+    )
+    device = forms.CharField(
+        required=False,
+        label='Device name'
     )
 
 
@@ -2587,7 +2805,8 @@ class PopulateDeviceBayForm(BootstrapMixin, forms.Form):
     installed_device = forms.ModelChoiceField(
         queryset=Device.objects.all(),
         label='Child Device',
-        help_text="Child devices must first be created and assigned to the site/rack of the parent device."
+        help_text="Child devices must first be created and assigned to the site/rack of the parent device.",
+        widget=StaticSelect2(),
     )
 
     def __init__(self, device_bay, *args, **kwargs):
@@ -2664,6 +2883,11 @@ class InventoryItemForm(BootstrapMixin, forms.ModelForm):
         fields = [
             'name', 'manufacturer', 'part_id', 'serial', 'asset_tag', 'description', 'tags',
         ]
+        widgets = {
+            'manufacturer': APISelect(
+                api_url="/api/dcim/manufacturers/"
+            )
+        }
 
 
 class InventoryItemCSVForm(forms.ModelForm):
@@ -2726,9 +2950,7 @@ class InventoryItemFilterForm(BootstrapMixin, forms.Form):
         label='Device name'
     )
     manufacturer = FilterChoiceField(
-        queryset=Manufacturer.objects.annotate(
-            filter_count=Count('inventory_items')
-        ),
+        queryset=Manufacturer.objects.all(),
         to_field_name='slug',
         null_label='-- None --'
     )
@@ -2825,9 +3047,11 @@ class VCMemberSelectForm(BootstrapMixin, ChainedFieldsMixin, forms.Form):
         queryset=Site.objects.all(),
         label='Site',
         required=False,
-        widget=forms.Select(
-            attrs={
-                'filter-for': 'rack',
+        widget=APISelect(
+            api_url="/api/dcim/sites/",
+            filter_for={
+                'rack': 'site_id',
+                'device': 'site_id',
             }
         )
     )
@@ -2839,9 +3063,11 @@ class VCMemberSelectForm(BootstrapMixin, ChainedFieldsMixin, forms.Form):
         label='Rack',
         required=False,
         widget=APISelect(
-            api_url='/api/dcim/racks/?site_id={{site}}',
+            api_url='/api/dcim/racks/',
+            filter_for={
+                'device': 'rack_id'
+            },
             attrs={
-                'filter-for': 'device',
                 'nullable': 'true',
             }
         )
@@ -2856,7 +3082,7 @@ class VCMemberSelectForm(BootstrapMixin, ChainedFieldsMixin, forms.Form):
         ),
         label='Device',
         widget=APISelect(
-            api_url='/api/dcim/devices/?site_id={{site}}&rack_id={{rack}}',
+            api_url='/api/dcim/devices/',
             display_field='display_name',
             disabled_indicator='virtual_chassis'
         )

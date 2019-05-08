@@ -1,7 +1,7 @@
 from collections import OrderedDict
 
 from django.conf import settings
-from django.db.models import F, Q
+from django.db.models import F
 from django.http import HttpResponseForbidden
 from django.shortcuts import get_object_or_404
 from drf_yasg import openapi
@@ -35,7 +35,7 @@ from .exceptions import MissingFilterException
 
 class DCIMFieldChoicesViewSet(FieldChoicesViewSet):
     fields = (
-        (Cable, ['length_unit', 'status', 'type']),
+        (Cable, ['length_unit', 'status', 'termination_a_type', 'termination_b_type', 'type']),
         (ConsolePort, ['connection_status']),
         (Device, ['face', 'status']),
         (DeviceType, ['subdevice_role']),
@@ -158,6 +158,11 @@ class RackViewSet(CustomFieldModelViewSet):
             except ValueError:
                 exclude_pk = None
         elevation = rack.get_rack_units(face, exclude_pk)
+
+        # Enable filtering rack units by ID
+        q = request.GET.get('q', None)
+        if q:
+            elevation = [u for u in elevation if q in str(u['id'])]
 
         page = self.paginate_queryset(elevation)
         if page is not None:
@@ -414,7 +419,9 @@ class PowerOutletViewSet(CableTraceMixin, ModelViewSet):
 
 
 class InterfaceViewSet(CableTraceMixin, ModelViewSet):
-    queryset = Interface.objects.select_related(
+    queryset = Interface.objects.filter(
+        device__isnull=False
+    ).select_related(
         'device', '_connected_interface', '_connected_circuittermination', 'cable'
     ).prefetch_related(
         'ip_addresses', 'tags'
@@ -491,11 +498,11 @@ class PowerConnectionViewSet(ListModelMixin, GenericViewSet):
 
 class InterfaceConnectionViewSet(ListModelMixin, GenericViewSet):
     queryset = Interface.objects.select_related(
-        'device', '_connected_interface', '_connected_circuittermination'
+        'device', '_connected_interface__device'
     ).filter(
         # Avoid duplicate connections by only selecting the lower PK in a connected pair
-        Q(_connected_interface__isnull=False, pk__lt=F('_connected_interface')) |
-        Q(_connected_circuittermination__isnull=False)
+        _connected_interface__isnull=False,
+        pk__lt=F('_connected_interface')
     )
     serializer_class = serializers.InterfaceConnectionSerializer
     filterset_class = filters.InterfaceConnectionFilter
