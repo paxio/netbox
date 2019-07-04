@@ -27,14 +27,14 @@ urlpatterns = [
     path(r'customers/<slug:slug>/changelog/', ObjectChangeLogView.as_view(), name='tenant_changelog', kwargs={'model': Tenant}),
 
     # Packages
-    url(r'packages/', views.PackageListView.as_view(), name='package_list'),
-    url(r'packages/add/', views.PackageCreateView.as_view(), name='package_add'),
-    url(r'packages/import/', views.PackageBulkImportView.as_view(), name='package_import'),
-    url(r'packages/edit/', views.PackageBulkEditView.as_view(), name='package_bulk_edit'),
-    url(r'packages/delete/', views.PackageBulkDeleteView.as_view(), name='package_bulk_delete'),
-    url(r'packages/<slug:slug>/', views.PackageView.as_view(), name='package'),
-    url(r'packages/<slug:slug>/edit/', views.PackageEditView.as_view(), name='package_edit'),
-    url(r'packages/<slug:slug>/delete/', views.PackageDeleteView.as_view(), name='package_delete'),
-    url(r'packages/<slug:slug>/changelog/', ObjectChangeLogView.as_view(), name='package_changelog', kwargs={'model': Package}),
+    path(r'packages/', views.PackageListView.as_view(), name='package_list'),
+    path(r'packages/add/', views.PackageCreateView.as_view(), name='package_add'),
+    path(r'packages/import/', views.PackageBulkImportView.as_view(), name='package_import'),
+    path(r'packages/edit/', views.PackageBulkEditView.as_view(), name='package_bulk_edit'),
+    path(r'packages/delete/', views.PackageBulkDeleteView.as_view(), name='package_bulk_delete'),
+    path(r'packages/<slug:slug>/', views.PackageView.as_view(), name='package'),
+    path(r'packages/<slug:slug>/edit/', views.PackageEditView.as_view(), name='package_edit'),
+    path(r'packages/<slug:slug>/delete/', views.PackageDeleteView.as_view(), name='package_delete'),
+    path(r'packages/<slug:slug>/changelog/', ObjectChangeLogView.as_view(), name='package_changelog', kwargs={'model': Package}),
 
 ]
