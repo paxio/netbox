@@ -185,6 +185,7 @@ class TenancyFilterForm(forms.Form):
         )
     )
 
+
 #
 #  Packages
 #
@@ -219,4 +220,3 @@ class PackageBulkEditForm(BootstrapMixin, AddRemoveTagsForm, CustomFieldBulkEdit
 
     class Meta:
         nullable_fields = []
-
